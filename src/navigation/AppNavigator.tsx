@@ -1,21 +1,23 @@
-// src/navigation/AppNavigator.tsx
-
 import React from 'react';
 import AuthStack from './AuthStack';
-// Tip dosyasını içeri aktar
-import { ThemeProps } from '../theme/types'; 
+// @ts-ignore
+import HomeScreen from '../screens/HomeScreen'; // Senin oluşturduğun sayfa
+import { ThemeProps } from '../theme/types';
 
-// import MainTabs from './MainTabs'; // Ana sayfa navigasyonu (Daha sonra eklenecek)
+// Yeni bir prop ekledik: "user" (Kullanıcı var mı yok mu?)
+interface AppNavigatorProps extends ThemeProps {
+  user: any;
+}
 
-// "AppNavigator" bileşenine "ThemeProps" tipini atadık
-const AppNavigator: React.FC<ThemeProps> = ({ activeTheme }) => {
-  
-  // TODO: Gelecek sprintlerde bu kısma Firebase'den kullanıcının giriş yapıp yapmadığı kontrolü gelecek.
-  const userLoggedIn = false; // Şimdilik hep Login ekranına gitsin.
+const AppNavigator: React.FC<AppNavigatorProps> = ({ activeTheme, user }) => {
 
+  // MANTIK: Kullanıcı varsa Home, yoksa Login göster
   return (
-    // Eğer kullanıcı giriş yapmadıysa AuthStack'i gösterir.
-    <AuthStack activeTheme={activeTheme} /> 
+    user ? (
+      <HomeScreen activeTheme={activeTheme} />
+    ) : (
+      <AuthStack activeTheme={activeTheme} />
+    )
   );
 };
 

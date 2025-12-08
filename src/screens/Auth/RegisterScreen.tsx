@@ -1,14 +1,14 @@
 // src/screens/Auth/RegisterScreen.tsx
 
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TextInput, 
-  TouchableOpacity, 
-  Alert, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Alert,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
@@ -16,7 +16,8 @@ import {
 } from 'react-native';
 import CustomButton from '../../components/CustomButton';
 import { ThemeColors } from '../../theme/types';
-// import { registerUser } from '../../services/auth'; // Backend servisi
+import { registerUser } from '../../services/auth'; // Backend servisi
+import { validateEmail, validatePassword } from '../../utils/validation';
 
 const RegisterScreen = ({ route, navigation }: any) => {
   const activeTheme: ThemeColors = route.params?.activeTheme;
@@ -30,26 +31,43 @@ const RegisterScreen = ({ route, navigation }: any) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
+    // 1. BOŞ ALAN KONTROLÜ
     if (!name || !surname || !email || !password) {
       Alert.alert('Eksik Bilgi', 'Lütfen tüm alanları doldurunuz.');
       return;
     }
 
+    // 2. MANTIK KONTROLLERİ (Senin yazdığın validation.js)
+    if (!validateEmail(email)) {
+      Alert.alert('Hatalı E-posta', 'Lütfen geçerli bir e-posta adresi giriniz.');
+      return;
+    }
+    if (!validatePassword(password)) {
+      Alert.alert('Güvenlik Uyarısı', 'Şifreniz en az 6 karakter olmalıdır.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Backend kayıt simülasyonu
-      console.log('Kayıt Bilgileri:', { name, surname, email, role });
-      
-      setTimeout(() => {
-        setIsLoading(false);
-        Alert.alert('Aramıza Hoş Geldin!', 'Hesabın başarıyla oluşturuldu.', [
-            { text: 'Harika!', onPress: () => navigation.navigate('Login') }
-        ]);
-      }, 1500);
+      // 3. FIREBASE'E KAYIT İSTEĞİ (auth.js servisi)
+      // registerUser fonksiyonu auth.js içinde tanımlı ve bizden (email, password, userData) bekliyor
+      await registerUser(email, password, {
+        name: name,
+        surname: surname,
+        role: role // 'student' veya 'company'
+      });
+
+      setIsLoading(false);
+
+      // Başarılı olursa kullanıcıyı bilgilendir ve Login'e yönlendir
+      Alert.alert('Tebrikler! 🎉', 'Hesabın başarıyla oluşturuldu. Şimdi giriş yapabilirsin.', [
+        { text: 'Giriş Yap', onPress: () => navigation.navigate('Login') }
+      ]);
 
     } catch (error) {
       setIsLoading(false);
-      Alert.alert('Kayıt Hatası', 'Bir sorun oluştu.');
+      // Hata mesajı zaten auth.js içinde Alert ile gösteriliyor, buraya ekstra bir şey yazmaya gerek yok.
+      console.log("Kayıt hatası:", error);
     }
   };
 
@@ -61,132 +79,132 @@ const RegisterScreen = ({ route, navigation }: any) => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: activeTheme.background }]}>
       <StatusBar barStyle={activeTheme.background === '#1A1C22' ? 'light-content' : 'dark-content'} />
-      
-      <KeyboardAvoidingView 
+
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-            
-            {/* 1. HEADER ALANI */}
-            <View style={styles.headerContainer}>
-                <Text style={[styles.title, { color: activeTheme.text }]}>Hesap Oluştur</Text>
-                <Text style={[styles.subText, { color: activeTheme.textSecondary }]}>
-                    Kariyer yolculuğuna başlamak için bilgilerinizi girin.
-                </Text>
-            </View>
 
-            {/* 2. FORM ALANI */}
-            <View style={styles.formContainer}>
-                
-                {/* Ad ve Soyad (Yan Yana) */}
-                <View style={styles.row}>
-                    <View style={[inputStyle, styles.halfInput]}>
-                        <Text style={[styles.inputLabel, { color: activeTheme.textSecondary }]}>AD</Text>
-                        <TextInput
-                            placeholder="Adınız"
-                            placeholderTextColor={placeholderColor}
-                            value={name}
-                            onChangeText={setName}
-                            style={inputText}
-                        />
-                    </View>
-                    <View style={[inputStyle, styles.halfInput]}>
-                        <Text style={[styles.inputLabel, { color: activeTheme.textSecondary }]}>SOYAD</Text>
-                        <TextInput
-                            placeholder="Soyadınız"
-                            placeholderTextColor={placeholderColor}
-                            value={surname}
-                            onChangeText={setSurname}
-                            style={inputText}
-                        />
-                    </View>
-                </View>
+          {/* 1. HEADER ALANI */}
+          <View style={styles.headerContainer}>
+            <Text style={[styles.title, { color: activeTheme.text }]}>Hesap Oluştur</Text>
+            <Text style={[styles.subText, { color: activeTheme.textSecondary }]}>
+              Kariyer yolculuğuna başlamak için bilgilerinizi girin.
+            </Text>
+          </View>
 
-                {/* E-posta */}
-                <View style={inputStyle}>
-                    <Text style={[styles.inputLabel, { color: activeTheme.textSecondary }]}>E-POSTA</Text>
-                    <TextInput
-                        placeholder="ornek@mail.com"
-                        placeholderTextColor={placeholderColor}
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        style={inputText}
-                    />
-                </View>
+          {/* 2. FORM ALANI */}
+          <View style={styles.formContainer}>
 
-                {/* Şifre */}
-                <View style={inputStyle}>
-                    <Text style={[styles.inputLabel, { color: activeTheme.textSecondary }]}>ŞİFRE</Text>
-                    <TextInput
-                        placeholder="En az 6 karakter"
-                        placeholderTextColor={placeholderColor}
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry
-                        style={inputText}
-                    />
-                </View>
-
-                {/* 3. ROL SEÇİMİ (MODERN) */}
-                <Text style={[styles.roleLabel, { color: activeTheme.text }]}>Hesap Türünü Seç:</Text>
-                <View style={styles.roleContainer}>
-                    {/* Öğrenci Butonu */}
-                    <TouchableOpacity 
-                        style={[
-                            styles.roleButton, 
-                            { backgroundColor: role === 'student' ? activeTheme.primary : activeTheme.surface },
-                            role === 'student' && styles.activeRoleButtonShadow // Seçiliyse gölge ekle
-                        ]}
-                        onPress={() => setRole('student')}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={{fontSize: 24, marginBottom: 5}}>🎓</Text>
-                        <Text style={[
-                            styles.roleText, 
-                            { color: role === 'student' ? '#FFF' : activeTheme.textSecondary }
-                        ]}>Öğrenci</Text>
-                    </TouchableOpacity>
-                    
-                    {/* Firma Butonu */}
-                    <TouchableOpacity 
-                        style={[
-                            styles.roleButton, 
-                            { backgroundColor: role === 'company' ? activeTheme.primary : activeTheme.surface },
-                            role === 'company' && styles.activeRoleButtonShadow
-                        ]}
-                        onPress={() => setRole('company')}
-                        activeOpacity={0.8}
-                    >
-                         <Text style={{fontSize: 24, marginBottom: 5}}>💼</Text>
-                        <Text style={[
-                            styles.roleText, 
-                            { color: role === 'company' ? '#FFF' : activeTheme.textSecondary }
-                        ]}>Firma</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Kayıt Butonu */}
-                <CustomButton
-                    onPress={handleRegister}
-                    title="Kayıt Ol"
-                    activeTheme={activeTheme}
-                    isLoading={isLoading}
-                    style={styles.shadowButton}
+            {/* Ad ve Soyad (Yan Yana) */}
+            <View style={styles.row}>
+              <View style={[inputStyle, styles.halfInput]}>
+                <Text style={[styles.inputLabel, { color: activeTheme.textSecondary }]}>AD</Text>
+                <TextInput
+                  placeholder="Adınız"
+                  placeholderTextColor={placeholderColor}
+                  value={name}
+                  onChangeText={setName}
+                  style={inputText}
                 />
+              </View>
+              <View style={[inputStyle, styles.halfInput]}>
+                <Text style={[styles.inputLabel, { color: activeTheme.textSecondary }]}>SOYAD</Text>
+                <TextInput
+                  placeholder="Soyadınız"
+                  placeholderTextColor={placeholderColor}
+                  value={surname}
+                  onChangeText={setSurname}
+                  style={inputText}
+                />
+              </View>
             </View>
 
-            {/* 4. FOOTER */}
-            <View style={styles.footerContainer}>
-                <Text style={{ color: activeTheme.textSecondary }}>Zaten hesabın var mı? </Text>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={[styles.linkText, { color: activeTheme.primary }]}>
-                        Giriş Yap
-                    </Text>
-                </TouchableOpacity>
+            {/* E-posta */}
+            <View style={inputStyle}>
+              <Text style={[styles.inputLabel, { color: activeTheme.textSecondary }]}>E-POSTA</Text>
+              <TextInput
+                placeholder="ornek@mail.com"
+                placeholderTextColor={placeholderColor}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={inputText}
+              />
             </View>
+
+            {/* Şifre */}
+            <View style={inputStyle}>
+              <Text style={[styles.inputLabel, { color: activeTheme.textSecondary }]}>ŞİFRE</Text>
+              <TextInput
+                placeholder="En az 6 karakter"
+                placeholderTextColor={placeholderColor}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                style={inputText}
+              />
+            </View>
+
+            {/* 3. ROL SEÇİMİ (MODERN) */}
+            <Text style={[styles.roleLabel, { color: activeTheme.text }]}>Hesap Türünü Seç:</Text>
+            <View style={styles.roleContainer}>
+              {/* Öğrenci Butonu */}
+              <TouchableOpacity
+                style={[
+                  styles.roleButton,
+                  { backgroundColor: role === 'student' ? activeTheme.primary : activeTheme.surface },
+                  role === 'student' && styles.activeRoleButtonShadow // Seçiliyse gölge ekle
+                ]}
+                onPress={() => setRole('student')}
+                activeOpacity={0.8}
+              >
+                <Text style={{ fontSize: 24, marginBottom: 5 }}>🎓</Text>
+                <Text style={[
+                  styles.roleText,
+                  { color: role === 'student' ? '#FFF' : activeTheme.textSecondary }
+                ]}>Öğrenci</Text>
+              </TouchableOpacity>
+
+              {/* Firma Butonu */}
+              <TouchableOpacity
+                style={[
+                  styles.roleButton,
+                  { backgroundColor: role === 'company' ? activeTheme.primary : activeTheme.surface },
+                  role === 'company' && styles.activeRoleButtonShadow
+                ]}
+                onPress={() => setRole('company')}
+                activeOpacity={0.8}
+              >
+                <Text style={{ fontSize: 24, marginBottom: 5 }}>💼</Text>
+                <Text style={[
+                  styles.roleText,
+                  { color: role === 'company' ? '#FFF' : activeTheme.textSecondary }
+                ]}>Firma</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Kayıt Butonu */}
+            <CustomButton
+              onPress={handleRegister}
+              title="Kayıt Ol"
+              activeTheme={activeTheme}
+              isLoading={isLoading}
+              style={styles.shadowButton}
+            />
+          </View>
+
+          {/* 4. FOOTER */}
+          <View style={styles.footerContainer}>
+            <Text style={{ color: activeTheme.textSecondary }}>Zaten hesabın var mı? </Text>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Text style={[styles.linkText, { color: activeTheme.primary }]}>
+                Giriş Yap
+              </Text>
+            </TouchableOpacity>
+          </View>
 
         </ScrollView>
       </KeyboardAvoidingView>

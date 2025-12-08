@@ -1,21 +1,22 @@
 // src/screens/Auth/LoginScreen.tsx
 
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  TextInput, 
-  SafeAreaView, 
-  Alert, 
-  KeyboardAvoidingView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  SafeAreaView,
+  Alert,
+  KeyboardAvoidingView,
   Platform,
   StatusBar
 } from 'react-native';
 import CustomButton from '../../components/CustomButton';
 import { ThemeColors } from '../../theme/types';
 import { loginUser } from '../../services/auth';
+import { validateEmail } from '../../utils/validation';
 
 const LoginScreen = ({ route, navigation }: any) => {
   const activeTheme: ThemeColors = route.params.activeTheme;
@@ -25,21 +26,36 @@ const LoginScreen = ({ route, navigation }: any) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
+    // 1. Boş Alan Kontrolü
     if (!email || !password) {
-        Alert.alert('Eksik Bilgi', 'Lütfen e-posta ve şifrenizi giriniz.');
-        return;
+      Alert.alert('Eksik Bilgi', 'Lütfen e-posta ve şifrenizi giriniz.');
+      return;
     }
-    
+
+    // 2. Format Kontrolü (Gereksiz yere Firebase'e gitmemek için)
+    if (!validateEmail(email)) {
+      Alert.alert('Hata', 'Lütfen geçerli bir e-posta adresi giriniz.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-        await loginUser(email, password);
+      // 3. Firebase Giriş İsteği
+      await loginUser(email, password);
+
+      setIsLoading(false);
+      // Şimdilik sadece mesaj verelim, navigasyonu sonraki adımda çözeceğiz
+      Alert.alert('Başarılı', 'Giriş yapıldı! Hoş geldin.', [
+        { text: 'Tamam', onPress: () => console.log('Giriş OK') }
+      ]);
+
     } catch (e) {
-        // Hata servisten dönüyor
-    } finally {
-        setIsLoading(false);
+      setIsLoading(false);
+      // Hata mesajı auth.js içinden alert olarak geliyor zaten
+      console.log(e);
     }
   };
-  
+
   const navigateToRegister = () => {
     navigation.navigate('Register');
   };
@@ -47,13 +63,13 @@ const LoginScreen = ({ route, navigation }: any) => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: activeTheme.background }]}>
       <StatusBar barStyle={activeTheme.background === '#1A1C22' ? 'light-content' : 'dark-content'} />
-      
+
       {/* Klavye açılınca tasarımı yukarı iten yapı */}
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        
+
         {/* 1. HEADER & LOGO ALANI */}
         <View style={styles.headerContainer}>
           <View style={[styles.logoPlaceholder, { backgroundColor: activeTheme.surface }]}>
@@ -69,31 +85,31 @@ const LoginScreen = ({ route, navigation }: any) => {
 
         {/* 2. FORM ALANI */}
         <View style={styles.formContainer}>
-          
+
           {/* Email Input */}
           <View style={[styles.inputContainer, { backgroundColor: activeTheme.surface }]}>
             <Text style={[styles.inputLabel, { color: activeTheme.textSecondary }]}>E-POSTA</Text>
             <TextInput
-                placeholder="ornek@ogrenci.edu.tr"
-                placeholderTextColor={activeTheme.textSecondary + '80'} // Hafif saydam
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={[styles.input, { color: activeTheme.text }]}
+              placeholder="ornek@ogrenci.edu.tr"
+              placeholderTextColor={activeTheme.textSecondary + '80'} // Hafif saydam
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={[styles.input, { color: activeTheme.text }]}
             />
           </View>
-          
+
           {/* Şifre Input */}
           <View style={[styles.inputContainer, { backgroundColor: activeTheme.surface }]}>
             <Text style={[styles.inputLabel, { color: activeTheme.textSecondary }]}>ŞİFRE</Text>
             <TextInput
-                placeholder="••••••••"
-                placeholderTextColor={activeTheme.textSecondary + '80'}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                style={[styles.input, { color: activeTheme.text }]}
+              placeholder="••••••••"
+              placeholderTextColor={activeTheme.textSecondary + '80'}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              style={[styles.input, { color: activeTheme.text }]}
             />
           </View>
 
