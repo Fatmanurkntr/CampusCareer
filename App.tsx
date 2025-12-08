@@ -1,45 +1,31 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+// App.tsx
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import React from 'react';
+import { useColorScheme } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+// Senin oluşturduğun dosyaları içe aktarıyoruz
+import { Themes } from './src/theme/colors'; 
+import AppNavigator from './src/navigation/AppNavigator'; 
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+  // 1. Telefonun temasını al (light, dark, null veya undefined olabilir)
+  const scheme = useColorScheme(); 
+
+  // 2. TEMA SEÇİMİ (DÜZELTİLDİ ✅)
+  // Basitçe soruyoruz: "Tema dark mı?" 
+  // Evetse DarkColors, değilse (light, null, undefined vs.) LightColors kullan.
+  const activeTheme = scheme === 'dark' ? Themes.dark : Themes.light;
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <NavigationContainer>
+        {/* Temayı navigasyona gönderiyoruz */}
+        <AppNavigator activeTheme={activeTheme} /> 
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 }
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
 
 export default App;
