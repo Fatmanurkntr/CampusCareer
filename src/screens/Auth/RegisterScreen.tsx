@@ -49,20 +49,25 @@ const RegisterScreen = ({ route, navigation }: any) => {
 
     setIsLoading(true);
     try {
-      // 3. FIREBASE'E KAYIT İSTEĞİ (auth.js servisi)
-      // registerUser fonksiyonu auth.js içinde tanımlı ve bizden (email, password, userData) bekliyor
       await registerUser(email, password, {
         name: name,
         surname: surname,
-        role: role // 'student' veya 'company'
+        role: role
       });
 
       setIsLoading(false);
 
-      // Başarılı olursa kullanıcıyı bilgilendir ve Login'e yönlendir
-      Alert.alert('Aramıza Hoş Geldin! 🎉', 'Hesabın oluşturuldu ve otomatik giriş yapıldı.', [
-        { text: 'Keşfetmeye Başla', onPress: () => console.log('Zaten içerideyiz') }
-      ]);
+      // ✅ YENİ MESAJ VE YÖNLENDİRME
+      Alert.alert(
+        'Kayıt Başarılı! 📧',
+        `Lütfen ${email} adresine gönderdiğimiz doğrulama linkine tıklayın. Hesabınızı onayladıktan sonra giriş yapabilirsiniz.`,
+        [
+          {
+            text: 'Giriş Ekranına Dön',
+            onPress: () => navigation.navigate('Login') // Login ekranına geri atıyoruz
+          }
+        ]
+      );
 
     } catch (error) {
       setIsLoading(false);
