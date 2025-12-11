@@ -1,4 +1,4 @@
-// src/services/auth.ts
+// src/services/auth.js
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { Alert } from 'react-native';
@@ -9,7 +9,6 @@ export const loginUser = async (email, password) => {
     const userCredential = await auth().signInWithEmailAndPassword(email, password);
     return userCredential.user;
   } catch (error) {
-    // ✅ KRİTER: Hatalı girişte uyarı mesajı
     if (error.code === 'auth/invalid-email') Alert.alert('Hata', 'Geçersiz e-posta adresi.');
     else if (error.code === 'auth/user-not-found') Alert.alert('Hata', 'Kullanıcı bulunamadı.');
     else if (error.code === 'auth/wrong-password') Alert.alert('Hata', 'Şifre yanlış.');
@@ -17,7 +16,6 @@ export const loginUser = async (email, password) => {
     throw error;
   }
 };
-// ... Mevcut login ve register fonksiyonlarının altına ekle:
 
 // ÇIKIŞ YAP FONKSİYONU
 export const logoutUser = async () => {
@@ -28,14 +26,15 @@ export const logoutUser = async () => {
     throw error;
   }
 };
-// KAYIT FONKSİYONU
+
+// KAYIT FONKSİYONU (Güncellendi)
 export const registerUser = async (email, password, userData) => {
   try {
     // 1. Auth'a kaydet
     const userCredential = await auth().createUserWithEmailAndPassword(email, password);
     const user = userCredential.user;
 
-    // ✅ KRİTER: Firestore Users koleksiyonuna veri kaydetme
+    // 2. Firestore'a kaydet
     await firestore().collection('Users').doc(user.uid).set({
       name: userData.name,
       surname: userData.surname,
@@ -44,10 +43,17 @@ export const registerUser = async (email, password, userData) => {
       createdAt: firestore.FieldValue.serverTimestamp(),
     });
 
+    // --- YENİ EKLENEN KISIM: DOĞRULAMA MAİLİ ---
+
+    // Doğrulama linki gönder
+    await user.sendEmailVerification();
+
+    // Kullanıcıyı hemen dışarı at (Otomatik giriş yapmasın)
+    await auth().signOut();
+
     return user;
   } catch (error) {
     Alert.alert('Kayıt Hatası', error.message);
     throw error;
   }
-
 };

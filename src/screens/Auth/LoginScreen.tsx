@@ -15,7 +15,8 @@ import {
 } from 'react-native';
 import CustomButton from '../../components/CustomButton';
 import { ThemeColors } from '../../theme/types';
-import { loginUser } from '../../services/auth';
+// @ts-ignore
+import { loginUser, logoutUser } from '../../services/auth';
 import { validateEmail } from '../../utils/validation';
 
 const LoginScreen = ({ route, navigation }: any) => {
@@ -40,19 +41,30 @@ const LoginScreen = ({ route, navigation }: any) => {
 
     setIsLoading(true);
     try {
-      // 3. Firebase Giriş İsteği
-      await loginUser(email, password);
+      // 1. Giriş yapmayı dene
+      const user = await loginUser(email, password);
 
-      setIsLoading(false);
-      // Şimdilik sadece mesaj verelim, navigasyonu sonraki adımda çözeceğiz
-      Alert.alert('Başarılı', 'Giriş yapıldı! Hoş geldin.', [
-        { text: 'Tamam', onPress: () => console.log('Giriş OK') }
-      ]);
+      // ✅ 2. E-POSTA DOĞRULANMIŞ MI KONTROLÜ
+      if (user && !user.emailVerified) {
 
-    } catch (e) {
+        // Eğer doğrulamamışsa, hemen çıkış yaptır (İçeri alma)
+        await logoutUser();
+
+        Alert.alert(
+          'E-posta Onaylanmadı ⚠️',
+          'Güvenliğiniz için lütfen mail adresinize gelen linke tıklayarak hesabınızı doğrulayın.'
+        );
+        setIsLoading(false);
+        return; // Fonksiyonu durdur, aşağıya inmesin
+      }
+
+      // Doğrulamışsa her şey yolunda
       setIsLoading(false);
-      // Hata mesajı auth.js içinden alert olarak geliyor zaten
-      console.log(e);
+      Alert.alert('Başarılı', 'Giriş yapıldı! Hoş geldin.');
+
+    } catch (e: any) {
+      setIsLoading(false);
+      // Hata mesajı zaten auth.js içinde çıkıyor
     }
   };
 
