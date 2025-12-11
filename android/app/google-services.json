@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "152000821754",
+    "project_id": "bil-403kariyerasistani",
+    "storage_bucket": "bil-403kariyerasistani.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:152000821754:android:9131ae583218096f564c43",
+        "android_client_info": {
+          "package_name": "com.campuscareerapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhFqKTjsY623ik-UlCBaL5W2HIgsaef4A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

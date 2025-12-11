@@ -1,4 +1,4 @@
-// src/services/auth.js
+// src/services/auth.ts
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { Alert } from 'react-native';
@@ -17,7 +17,17 @@ export const loginUser = async (email, password) => {
     throw error;
   }
 };
+// ... Mevcut login ve register fonksiyonlarının altına ekle:
 
+// ÇIKIŞ YAP FONKSİYONU
+export const logoutUser = async () => {
+  try {
+    await auth().signOut();
+  } catch (error) {
+    Alert.alert('Hata', 'Çıkış yapılamadı.');
+    throw error;
+  }
+};
 // KAYIT FONKSİYONU
 export const registerUser = async (email, password, userData) => {
   try {
@@ -39,4 +49,5 @@ export const registerUser = async (email, password, userData) => {
     Alert.alert('Kayıt Hatası', error.message);
     throw error;
   }
+
 };
