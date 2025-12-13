@@ -57,3 +57,37 @@ export const registerUser = async (email, password, userData) => {
     throw error;
   }
 };
+// src/services/auth.js dosyasının en altına ekle:
+
+// 1. Kullanıcı Bilgilerini Çekme (Profil Ekranı için)
+export const getUserProfile = async (uid) => {
+  try {
+    const userDoc = await firestore().collection('Users').doc(uid).get();
+    if (userDoc.exists) {
+      return userDoc.data();
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error('Veri çekme hatası:', error);
+    throw error;
+  }
+};
+
+// 2. Kullanıcı Bilgilerini Güncelleme (Ayarlar Ekranı için)
+export const updateUserProfile = async (uid, data) => {
+  try {
+    await firestore().collection('Users').doc(uid).update({
+      name: data.name,
+      school: data.school,
+      department: data.department,
+      bio: data.bio,
+      profileImage: data.profileImage, // Şimdilik sadece resim yolunu (URI) kaydediyoruz
+      ghostMode: data.ghostMode,
+      updatedAt: firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Güncelleme hatası:', error);
+    throw error;
+  }
+};
