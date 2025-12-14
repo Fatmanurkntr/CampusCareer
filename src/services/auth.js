@@ -74,6 +74,13 @@ export const registerUser = async (email, password, role, additionalData) => {
         await firestore().collection('Users').doc(user.uid).set(dbData);
 
         console.log('Kullanıcı ve detayları başarıyla kaydedildi.');
+
+        // 👇 EKLENEN KISIM BURASI 👇
+        // Bu iki satır mail gönderip kullanıcıyı giriş ekranına atar.
+        await user.sendEmailVerification();
+        await auth().signOut(); 
+        // 👆 EKLENEN KISIM BURASI 👆
+
         return user;
     } catch (error) {
         console.error("Kayıt hatası:", error);
