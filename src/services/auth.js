@@ -1,17 +1,9 @@
-// src/services/auth.js
-
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { Alert } from 'react-native';
-// TypeScript tipi olan 'AuthMode' importu kaldırıldı.
 
 /**
- * Kullanıcıyı e-posta, şifre ve mod (student/company) ile giriş yaptırır.
- * Bu fonksiyon, LoginScreen.tsx'ten 3 argümanla çağrıldığı için 3. argümanı (mode) kabul eder.
- *
- * @param {string} email
- * @param {string} password
- * @param {string} mode - 'student' veya 'company'
+ * Kullanıcı Girişi
  */
 export const loginUser = async (email, password, mode) => { 
     console.log(`${mode} girişi yapılıyor...`);
@@ -27,7 +19,9 @@ export const loginUser = async (email, password, mode) => {
     }
 };
 
-// ÇIKIŞ YAP FONKSİYONU
+/**
+ * Çıkış Yapma
+ */
 export const logoutUser = async () => {
     try {
         await auth().signOut();
@@ -37,36 +31,60 @@ export const logoutUser = async () => {
     }
 };
 
-// KAYIT FONKSİYONU (Güncellendi)
-export const registerUser = async (email, password, userData) => {
+/**
+ * KAYIT OLMA (Frontend verilerini veritabanına bağlayan kısım)
+ */
+export const registerUser = async (email, password, role, additionalData) => {
     try {
-        // 1. Auth'a kaydet
+        // 1. Kullanıcıyı oluştur
         const userCredential = await auth().createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // 2. Firestore'a kaydet
-        await firestore().collection('Users').doc(user.uid).set({
-            name: userData.name,
-            surname: userData.surname,
-            role: userData.role, // student veya company
+        // 2. Temel veriyi hazırla
+        let dbData = {
+            uid: user.uid,
             email: email,
+            role: role, // 'student' veya 'company'
             createdAt: firestore.FieldValue.serverTimestamp(),
-        });
+            profileImage: null,
+        };
 
-        // Doğrulama linki gönder
-        await user.sendEmailVerification();
+        // 3. Rolüne göre (Öğrenci veya Şirket) ek verileri kaydet
+        if (role === 'student') {
+            dbData = {
+                ...dbData,
+                name: additionalData.name || '',
+                surname: additionalData.surname || '',
+                school: additionalData.school || '',       // Okul verisi buraya kaydediliyor
+                department: additionalData.department || '', // Bölüm verisi buraya kaydediliyor
+                bio: '',
+                ghostMode: false,
+            };
+        } else if (role === 'company') {
+            dbData = {
+                ...dbData,
+                companyName: additionalData.companyName || '', // Şirket adı buraya kaydediliyor
+                sector: additionalData.sector || '',
+                website: additionalData.website || '',
+                description: '',
+            };
+        }
 
-        // Kullanıcıyı hemen dışarı at (Otomatik giriş yapmasın)
-        await auth().signOut();
+        // 4. Veritabanına yaz
+        await firestore().collection('Users').doc(user.uid).set(dbData);
 
+        console.log('Kullanıcı ve detayları başarıyla kaydedildi.');
         return user;
     } catch (error) {
+        console.error("Kayıt hatası:", error);
         Alert.alert('Kayıt Hatası', error.message);
         throw error;
     }
 };
 
-// 1. Kullanıcı Bilgilerini Çekme (Profil Ekranı için)
+/**
+ * Profil Getirme (Profil Sayfasında veriyi göstermek için)
+ */
 export const getUserProfile = async (uid) => {
     try {
         const userDoc = await firestore().collection('Users').doc(uid).get();
@@ -81,18 +99,16 @@ export const getUserProfile = async (uid) => {
     }
 };
 
-// 2. Kullanıcı Bilgilerini Güncelleme (Ayarlar Ekranı için)
+/**
+ * Profil Güncelleme (Ayarlar Sayfası için)
+ */
 export const updateUserProfile = async (uid, data) => {
     try {
         await firestore().collection('Users').doc(uid).update({
-            name: data.name,
-            school: data.school,
-            department: data.department,
-            bio: data.bio,
-            profileImage: data.profileImage, // Şimdilik sadece resim yolunu (URI) kaydediyoruz
-            ghostMode: data.ghostMode,
+            ...data,
             updatedAt: firestore.FieldValue.serverTimestamp(),
         });
+        console.log('Profil güncellendi!');
     } catch (error) {
         console.error('Güncelleme hatası:', error);
         throw error;
