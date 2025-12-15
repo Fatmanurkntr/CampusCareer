@@ -1,59 +1,38 @@
 import React from 'react';
-// Correct import for native stack navigator
-import { createNativeStackNavigator } from '@react-navigation/native-stack'; 
-import { Text, View, StyleSheet, Button } from 'react-native';
-
-import { useAuth } from '../context/AuthContext'; 
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ThemeProps } from '../theme/types';
 
-// Stack variable initialized with the correct native stack creator
+// 🔥 EKRANLAR (screens/Auth/Company klasöründen)
+import CompanyHomeScreen from '../screens/Auth/Company/CompanyHomeScreen';
+import AddJobScreen from '../screens/Auth/Company/AddJobScreen';
+import CompanyJobDetailScreen from '../screens/Auth/Company/CompanyJobDetailScreen';
+import EditJobScreen from '../screens/Auth/Company/EditJobScreen'; // ✅ YENİ EKLENDİ
+
 const Stack = createNativeStackNavigator();
 
-// 🚨 Yer Tutucu Firma Ana Sayfası (Firma Yönetim Paneli)
-const CompanyHomeScreen: React.FC<ThemeProps> = ({ activeTheme }) => {
-    const { logout } = useAuth();
-    return (
-        <View style={[styles.container, { backgroundColor: activeTheme.background }]}>
-            <Text style={[styles.header, { color: activeTheme.primary }]}>FİRMA YÖNETİM PANELİ</Text>
-            <Text style={{ color: activeTheme.textSecondary, textAlign: 'center' }}>
-                Burada ilan yayınlama, başvuruları yönetme vb. yer alacak.
-            </Text>
-            <View style={{ marginTop: 20 }}>
-                <Button 
-                    title="Çıkış Yap" 
-                    onPress={logout} 
-                    color={activeTheme.primary} 
-                />
-            </View>
-        </View>
-    );
-};
-
-// Firma Navigasyon Yığını (Stack)
 const CompanyStack: React.FC<ThemeProps> = ({ activeTheme }) => {
     return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="CompanyHome">
-                {/* Home screen is wrapped to pass activeTheme prop */}
-                {() => <CompanyHomeScreen activeTheme={activeTheme} />}
-            </Stack.Screen>
-            {/* Diğer Firma ekranları buraya eklenecek (Örn: CreateJob, ViewApplications) */}
+        <Stack.Navigator 
+            screenOptions={{ 
+                headerShown: false,
+                contentStyle: { backgroundColor: activeTheme.background } 
+            }}
+            initialRouteName="CompanyHome"
+        >
+            {/* 1. Firma Ana Sayfası */}
+            <Stack.Screen name="CompanyHome" component={CompanyHomeScreen} />
+            
+            {/* 2. İlan Ekleme Sayfası */}
+            <Stack.Screen name="AddJob" component={AddJobScreen} />
+
+            {/* 3. İlan Detay Sayfası */}
+            <Stack.Screen name="CompanyJobDetail" component={CompanyJobDetailScreen} />
+
+            {/* 4. İlan Düzenleme Sayfası (Kalem ikonuna tıklayınca burası açılacak) ✅ */}
+            <Stack.Screen name="EditJob" component={EditJobScreen} />
+
         </Stack.Navigator>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    header: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    }
-});
 
 export default CompanyStack;
