@@ -4,8 +4,8 @@ import React from 'react';
 import { ScrollView, Text, TouchableOpacity, StyleSheet, View } from 'react-native';
 import { ThemeColors } from '../theme/types';
 
-// Kategorilerimiz (İleride backend'den de gelebilir)
-const CATEGORIES = ['Tümü', 'Staj 🎓', 'Tam Zamanlı 💼', 'Remote 🏠', 'Part-Time ⏳', 'Etkinlik 🎉'];
+// 🔥 SADELEŞTİRİLMİŞ KATEGORİLER
+const CATEGORIES = ['Tümü', 'İş İlanı', 'Staj', 'Etkinlikler'];
 
 interface CategoryFilterProps {
   activeTheme: ThemeColors;
@@ -53,16 +53,16 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({ activeTheme, selectedCa
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16, // Altındaki listeyle mesafe
+    marginBottom: 16, 
   },
   scrollContent: {
-    paddingHorizontal: 20, // Soldan başlama boşluğu
+    paddingHorizontal: 20, 
   },
   chip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 20, // Tam yuvarlak köşeler
-    marginRight: 10, // Butonlar arası boşluk
+    borderRadius: 20, 
+    marginRight: 10, 
   },
   text: {
     fontSize: 14,

@@ -10,11 +10,11 @@ export interface JobPost {
   title: string;
   company: string;
   location: string;
-  type: string;    // Örn: Remote, Hybrid
-  logoUrl: string; // Resim linki
+  type: string;
+  logoUrl: string;
   postedAt: string;
+  link?: string; // ✅ Artık TypeScript bunu tanıyor (Soru işareti 'opsiyonel' demek)
 }
-
 interface JobCardProps {
   item: JobPost;          // Kartın içine gelecek veri
   activeTheme: ThemeColors; // Tema renkleri
