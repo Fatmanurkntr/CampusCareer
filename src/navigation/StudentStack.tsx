@@ -1,9 +1,13 @@
+// src/navigation/StudentStack.tsx
+
 import React from 'react';
-import { Text, Platform } from 'react-native'; 
+import { View, Platform } from 'react-native'; // Text importunu kaldırdık (artık ikon var)
 import { createBottomTabNavigator, BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
 import { RouteProp, ParamListBase } from '@react-navigation/native'; 
+// İkon Kütüphanesi
+import Feather from 'react-native-vector-icons/Feather';
 
 // SAYFALAR
 import FeedScreen from '../screens/Home/FeedScreen';
@@ -14,6 +18,7 @@ import FavoritesScreen from '../screens/Favorites/FavoritesScreen';
 import ApplicationsScreen from '../screens/Applications/ApplicationsScreen';
 
 import { ThemeProps, ThemeColors } from '../theme/types';
+
 const Stack = createNativeStackNavigator<StudentStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -29,7 +34,6 @@ type TabParamList = {
     'Keşfet': undefined;
     'Başvurularım': undefined;
     'Favorilerim': undefined;
-    'Profil': undefined; 
 };
 
 
@@ -40,37 +44,38 @@ const BottomTabs: React.FC<ThemeProps> = ({ activeTheme }) => {
 
     return (
         <Tab.Navigator
-            screenOptions={({ route, navigation }: { 
-                route: RouteProp<TabParamList, keyof TabParamList>;
-                navigation: BottomTabNavigationProp<ParamListBase>;
-            }) => ({
+            screenOptions={({ route }) => ({
                 headerShown: false,
+                tabBarShowLabel: false, // 🔥 YAZILARI GİZLEDİK (MİNİMAL)
                 tabBarStyle: {
-                    backgroundColor: activeTheme.surface,
-                    borderTopColor: 'rgba(0,0,0,0.1)',
+                    // 🔥 MODERN GÖRÜNÜM AYARLARI
+                    backgroundColor: activeTheme.background === '#000000' || activeTheme.background === '#0A0A32' 
+                        ? '#121212' // Koyu modda daha koyu gri
+                        : '#FFFFFF', // Açık modda beyaz
+                    borderTopWidth: 0, // Üstteki ince çizgiyi kaldırdık
+                    elevation: 10, // Android gölgesi
+                    shadowColor: '#000', // iOS gölgesi
+                    shadowOffset: { width: 0, height: -2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
                     height: 60 + (insets.bottom > 0 ? insets.bottom : 10), 
                     paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
-                    paddingTop: 8,
+                    paddingTop: 10, // Yazı kalktığı için ikonu ortaladık
                 },
                 tabBarActiveTintColor: activeTheme.primary,
                 tabBarInactiveTintColor: activeTheme.textSecondary,
                 
-                tabBarIcon: ({ focused, color }: { focused: boolean, color: string }) => {
+                // 🔥 EMOJİ YERİNE FEATHER İKONLARI
+                tabBarIcon: ({ focused, color }) => {
                     let iconName = '';
                     
-                    if (route.name === 'Ana Sayfa') iconName = '🏠';
-                    else if (route.name === 'Keşfet') iconName = '🧭'; 
-                    else if (route.name === 'Başvurularım') iconName = '💼'; 
-                    else if (route.name === 'Favorilerim') iconName = '❤️'; 
-                    else if (route.name === 'Profil') iconName = '👤'; 
+                    if (route.name === 'Ana Sayfa') iconName = 'home';
+                    else if (route.name === 'Keşfet') iconName = 'compass'; 
+                    else if (route.name === 'Başvurularım') iconName = 'briefcase'; 
+                    else if (route.name === 'Favorilerim') iconName = 'heart'; 
 
-                    return <Text style={{ fontSize: focused ? 26 : 22, color: color }}>{iconName}</Text>;
+                    return <Feather name={iconName} size={24} color={color} />;
                 },
-                tabBarLabelStyle: { 
-                    fontSize: 10, 
-                    fontWeight: '600',
-                    marginBottom: insets.bottom > 0 ? 0 : 5 
-                }
             })}
         >
             <Tab.Screen name="Ana Sayfa">
@@ -89,17 +94,6 @@ const BottomTabs: React.FC<ThemeProps> = ({ activeTheme }) => {
                 {() => <FavoritesScreen activeTheme={activeTheme} />}
             </Tab.Screen>
 
-            {/* Profil ekranını props ile doğru iletiyoruz */}
-            <Tab.Screen name="Profil">
-                {({ route, navigation }) => (
-                    <ProfileScreen 
-                        activeTheme={activeTheme} 
-                        route={route} 
-                        navigation={navigation}
-                    />
-                )}
-            </Tab.Screen>
-
         </Tab.Navigator>
     );
 };
@@ -109,14 +103,13 @@ const StudentStack: React.FC<ThemeProps> = ({ activeTheme }) => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}> 
             
+            {/* Alt Menüyü Tutan Ana Ekran */}
             <Stack.Screen name="Dashboard">
                 {() => <BottomTabs activeTheme={activeTheme} />}
             </Stack.Screen>
             
-            {/* 👇 KRİTİK DÜZELTME 1: Settings ekranını anonim fonksiyon ile sarmala */}
             <Stack.Screen 
                 name="Settings" 
-                // component yerine render fonksiyonu kullanıldı
                 options={{ 
                     headerShown: true, 
                     title: 'Profili Düzenle',
@@ -134,10 +127,8 @@ const StudentStack: React.FC<ThemeProps> = ({ activeTheme }) => {
                 )}
             </Stack.Screen>
             
-            {/* 👇 KRİTİK DÜZELTME 2: ProfileDetail ekranını anonim fonksiyon ile sarmala */}
             <Stack.Screen 
                 name="ProfileDetail" 
-                // component yerine render fonksiyonu kullanıldı
                 options={{ 
                     headerShown: false,
                 }} 

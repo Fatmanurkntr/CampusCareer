@@ -17,12 +17,14 @@ import auth from '@react-native-firebase/auth';
 // @ts-ignore
 import { getUserProfile } from '../../../services/auth';
 import { ThemeColors } from '../../../theme/types';
+
 interface ProfileScreenProps {
     route: any;
     navigation: any;
     activeTheme: ThemeColors; 
 }
 
+// --- SABİT VERİLER (Arkadaşının eklediği kısımlar aynen duruyor) ---
 const UPCOMING_EVENTS = [
     { id: '1', title: 'Kariyer Zirvesi 2025', date: '10 Ara 2025', color: '#E0F2F1', icon: '🗓️' },
     { id: '2', title: 'React Native Workshop', date: '12 Ara 2025', color: '#FFF3E0', icon: '💻' },
@@ -39,9 +41,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ route, navigation }) => {
         background: '#FFFFFF', text: '#000000', textSecondary: '#666666', primary: '#7C3AED', surface: '#F5F5F5'
     };
 
+    // 🔥 TEK EKLEME: Admin yetkisi kontrolü (Simülasyon)
+    const isAdmin = true; 
+
     const [loading, setLoading] = useState(true);
     const [userData, setUserData] = useState({
-        // Düzeltme: Soyadı da burada tutulmalı
         name: 'İsimsiz',
         surname: 'Kullanıcı', 
         school: 'Okul Girilmedi',
@@ -60,8 +64,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ route, navigation }) => {
             if (currentUser) {
                 const data = await getUserProfile(currentUser.uid);
                 if (data) {
-                    // Düzeltme: Gelen veriyi (name, surname, school vb.) state'e atıyoruz.
-                    // `...prev` ile varsa eski veriyi korur, `...data` ile yeni gelen veriyi (name, surname, school) günceller.
                     setUserData(prev => ({ ...prev, ...data }));
                 }
             }
@@ -95,6 +97,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ route, navigation }) => {
         <SafeAreaView style={[styles.container, { backgroundColor: activeTheme.background }]}>
             <StatusBar barStyle="dark-content" />
 
+            {/* HEADER KISMI (Aynen korundu) */}
             <View style={styles.header}>
                 <View style={styles.topBar}>
                     <Text style={[styles.headerTitle, { color: activeTheme.text }]}>Profilim</Text>
@@ -116,9 +119,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ route, navigation }) => {
                     </View>
 
                     <View style={styles.userInfo}>
-                        {/* KRİTİK DÜZELTME: Ad ve Soyadı birlikte gösteriyoruz. */}
                         <Text style={[styles.userName, { color: activeTheme.text }]}>{userData.name} {userData.surname}</Text> 
-                        
                         <Text style={[styles.userTitle, { color: activeTheme.textSecondary }]}>{userData.department} Öğrencisi</Text>
 
                         <View style={[styles.tagContainer, { backgroundColor: activeTheme.primary + '15' }]}>
@@ -151,6 +152,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ route, navigation }) => {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 
+                {/* 👇👇 SADECE BU KISIM EKLENDİ (Admin Butonu) 👇👇 */}
+                {isAdmin && (
+                    <TouchableOpacity 
+                        style={[styles.adminButton, { backgroundColor: activeTheme.primary }]}
+                        onPress={() => navigation.navigate('AdminDashboard')}
+                    >
+                        <Text style={styles.adminButtonText}>🛡️ Yönetici Paneli</Text>
+                    </TouchableOpacity>
+                )}
+                {/* 👆👆 EKLEME BİTTİ 👆👆 */}
+
+                {/* YAKLAŞAN ETKİNLİKLER (Aynen korundu) */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                         <Text style={[styles.sectionTitle, { color: activeTheme.text }]}>Yaklaşan Etkinlikler</Text>
@@ -167,6 +180,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ route, navigation }) => {
                     </ScrollView>
                 </View>
                 
+                {/* BAŞVURULARIM (Aynen korundu) */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                         <Text style={[styles.sectionTitle, { color: activeTheme.text }]}>Başvurularım</Text>
@@ -233,7 +247,28 @@ const styles = StyleSheet.create({
     appTitle: { fontSize: 15, fontWeight: '700' },
     appCompany: { fontSize: 13, marginTop: 2 },
     statusBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-    statusText: { fontSize: 11, fontWeight: '700' }
+    statusText: { fontSize: 11, fontWeight: '700' },
+    
+    // 👇 ADMIN BUTONU İÇİN EKLENEN STİL 👇
+    adminButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        marginHorizontal: 20,
+        borderRadius: 12,
+        marginBottom: 10, // Altındaki elemanla mesafe
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 3,
+    },
+    adminButtonText: {
+        color: '#FFF',
+        fontWeight: 'bold',
+        fontSize: 16
+    }
 });
 
 export default ProfileScreen;
