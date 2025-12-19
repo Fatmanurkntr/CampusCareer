@@ -44,10 +44,8 @@ const AppNavigator = () => {
                 cardStyle: { backgroundColor: activeTheme?.background || '#FFFFFF' }
             }}
         >
-            {/* 1. ANA AKIŞ */}
             <Stack.Screen name="Main">
                 {(props) => {
-                    // Admin ise de Student arayüzünü görsün
                     if (isAdmin) {
                         return <StudentStack {...props} activeTheme={activeTheme} />;
                     }
@@ -57,10 +55,7 @@ const AppNavigator = () => {
                 }}
             </Stack.Screen>
 
-            {/* 2. ADMİN EKRANLARI - 🔥 DÜZELTME BURADA 🔥 */}
-            {/* Şartı (isAdmin &&) kaldırıyoruz. Ekranlar her zaman tanımlı olsun. */}
-            {/* Erişim kontrolünü zaten Buton görünürlüğü ile yapıyoruz. */}
-
+            
             <Stack.Screen name="AdminDashboard">
                 {(props) => <AdminDashboardScreen {...props} activeTheme={activeTheme} />}
             </Stack.Screen>
@@ -68,9 +63,7 @@ const AppNavigator = () => {
             <Stack.Screen name="AdminDetail">
                 {(props) => <AdminDetailScreen {...props} activeTheme={activeTheme} />}
             </Stack.Screen>
-            {/* ------------------------------------------- */}
-
-            {/* 3. ORTAK EKRANLAR */}
+            
             <Stack.Screen name="ProfileDetail">
                 {(props) => <ProfileScreen {...props} activeTheme={activeTheme} />}
             </Stack.Screen>

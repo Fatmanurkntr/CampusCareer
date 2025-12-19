@@ -10,7 +10,6 @@ const CompanyProfileScreen = ({ navigation }: any) => {
     const [saving, setSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     
-    // Firma Bilgileri
     const [profileData, setProfileData] = useState({
         companyName: '',
         industry: '',
@@ -24,29 +23,29 @@ const CompanyProfileScreen = ({ navigation }: any) => {
     useEffect(() => {
         if (!currentUser) return;
         
-        // Verileri getir
         const unsubscribe = firestore()
             .collection('Users')
             .doc(currentUser.uid)
             .onSnapshot(doc => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    setProfileData({
-                        companyName: data?.companyName || '',
-                        industry: data?.industry || '',
-                        website: data?.website || '',
-                        about: data?.about || '',
-                        location: data?.location || ''
-                    });
-                }
-                setLoading(false);
-            });
+    const data = doc.data();
+
+    if (data) { 
+        setProfileData({
+            companyName: data?.companyName || '',
+            industry: data?.industry || '',
+            website: data?.website || '',
+            about: data?.about || '',
+            location: data?.location || ''
+        });
+    }
+    setLoading(false);
+});
 
         return () => unsubscribe();
     }, [currentUser]);
 
     const handleSave = async () => {
-        if (!profileData.companyName) {
+        if (!profileData.companyName.trim()) {
             Alert.alert("Hata", "Firma adi bos birakilamaz.");
             return;
         }
@@ -73,6 +72,14 @@ const CompanyProfileScreen = ({ navigation }: any) => {
         ]);
     };
 
+    const handleHeaderAction = () => {
+        if (isEditing) {
+            handleSave();
+        } else {
+            setIsEditing(true);
+        }
+    };
+
     if (loading) return <View style={styles.center}><ActivityIndicator color={PURPLE_COLOR} /></View>;
 
     return (
@@ -82,7 +89,7 @@ const CompanyProfileScreen = ({ navigation }: any) => {
                     <Text style={styles.headerBtnText}>Geri</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>KURUMSAL PROFIL</Text>
-                <TouchableOpacity onPress={() => isEditing ? handleSave() : setIsEditing(true)}>
+                <TouchableOpacity onPress={handleHeaderAction}>
                     {saving ? <ActivityIndicator size="small" color={PURPLE_COLOR} /> : 
                     <Text style={[styles.headerBtnText, { color: PURPLE_COLOR, fontWeight: 'bold' }]}>
                         {isEditing ? 'Kaydet' : 'Duzenle'}
@@ -91,15 +98,15 @@ const CompanyProfileScreen = ({ navigation }: any) => {
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
-                {/* Profil Logosu (Harf Icon) */}
                 <View style={styles.avatarSection}>
                     <View style={styles.avatarCircle}>
-                        <Text style={styles.avatarInitial}>{profileData.companyName.charAt(0)}</Text>
+                        <Text style={styles.avatarInitial}>
+                            {profileData.companyName ? profileData.companyName.charAt(0).toUpperCase() : '?'}
+                        </Text>
                     </View>
                     <Text style={styles.displayEmail}>{currentUser?.email}</Text>
                 </View>
 
-                {/* Form Alanlari */}
                 <View style={styles.form}>
                     <Text style={styles.label}>FIRMA ADI</Text>
                     <TextInput 
@@ -149,7 +156,6 @@ const CompanyProfileScreen = ({ navigation }: any) => {
                     />
                 </View>
 
-                {/* Cikis Butonu */}
                 {!isEditing && (
                     <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
                         <Text style={styles.logoutBtnText}>Oturumu Kapat</Text>

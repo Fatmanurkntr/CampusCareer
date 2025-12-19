@@ -1,10 +1,8 @@
 // src/utils/searchLogic.ts
 
 export const TOPIC_DICTIONARY: any = {
-    // 🔥 YAZILIM: 8 sonuç veren orijinal "Technology Events" terimi
     'Yazılım': { job: 'Software Engineer', event: 'Technology Events' },
     
-    // Diğer aktif 9'lu grid alanları
     'Tasarım': { job: 'UI UX Designer', event: 'Art and Design Exhibitions' },
     'Yapay Zeka': { job: 'AI Engineer', event: 'Artificial Intelligence Events' },
     'Oyun Geliş.': { job: 'Game Developer', event: 'Game Development Meetups' },
@@ -18,7 +16,6 @@ export const TOPIC_DICTIONARY: any = {
 export const buildSearchQuery = (category: string, topic: string) => {
     const terms = TOPIC_DICTIONARY[topic] || TOPIC_DICTIONARY['Yazılım'];
     
-    // 8 sonuç aldığın o meşhur kalıp
     if (category.includes('Etkinlik')) {
         return `${terms.event} in Istanbul`; 
     }

@@ -27,7 +27,6 @@ const AdminDashboardScreen: React.FC<Props> = ({ activeTheme }) => {
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [searchText, setSearchText] = useState('');
 
-  // --- 🔥 KIRMIZI HATA DÜZELTMESİ: PARALEL DİNLEYİCİLER ---
   useEffect(() => {
     setLoading(true);
     let jobs: any[] = [];
@@ -38,19 +37,16 @@ const AdminDashboardScreen: React.FC<Props> = ({ activeTheme }) => {
       setLoading(false);
     };
 
-    // İş ilanlarını bağımsız dinle
     const jobUnsub = firestore().collection('JobPostings').onSnapshot(snap => {
       jobs = snap?.docs.map(doc => ({ id: doc.id, dataType: 'job', ...doc.data() })) || [];
       combineData();
     }, () => setLoading(false));
 
-    // Etkinlikleri bağımsız dinle
     const eventUnsub = firestore().collection('EventPostings').onSnapshot(snap => {
       events = snap?.docs.map(doc => ({ id: doc.id, dataType: 'event', ...doc.data() })) || [];
       combineData();
     }, () => setLoading(false));
 
-    // Temizleme: İki aboneliği de durdur
     return () => {
       jobUnsub();
       eventUnsub();
@@ -88,15 +84,13 @@ const AdminDashboardScreen: React.FC<Props> = ({ activeTheme }) => {
       : { label: 'İŞ İLANI', bg: '#ECFDF5', color: '#059669' };
   };
 
-  // AdminDashboardScreen.tsx içinde renderCard fonksiyonunu bulun ve şu şekilde güncelleyin:
 
 const renderCard = ({ item }: { item: any }) => {
   const badge = getTypeBadge(item);
   return (
       <TouchableOpacity 
           style={[styles.card, { backgroundColor: activeTheme.surface }]}
-          // Admin detay sayfasına yönlendiriyoruz
-          onPress={() => navigation.navigate('AdminDetail', { item: item })} 
+          onPress={() => (navigation as any).navigate('AdminDetail', { item: item })} 
       >
           <View style={styles.cardHeader}>
               <View style={styles.cardInfoContainer}>
@@ -107,7 +101,6 @@ const renderCard = ({ item }: { item: any }) => {
                   <Text style={[styles.typeBadgeText, { color: badge.color }]}>{badge.label}</Text>
               </View>
           </View>
-          {/* ... Mevcut card içeriği aynı kalabilir ... */}
       </TouchableOpacity>
   );
 };

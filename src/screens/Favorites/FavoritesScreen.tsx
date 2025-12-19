@@ -20,7 +20,7 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ activeTheme }) => {
   const [loading, setLoading] = useState(true);
   const currentUser = auth().currentUser;
 
-  // 1. FAVORİLERİ CANLI DİNLE
+  
   useEffect(() => {
     if (!currentUser) return;
 
@@ -42,15 +42,11 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ activeTheme }) => {
     return () => unsubscribe();
   }, []);
 
-  // 2. FAVORİDEN KALDIR
 
   const removeFavorite = async (favId: string, contentId: string) => {
     try {
-      // 1. Veritabanından (Firestore) sil
       await firestore().collection('Favorites').doc(favId).delete();
 
-      // 2. Bildirimi iptal et (Mobil)
-      // contentId: İlanın veya etkinliğin gerçek ID'sidir
       if (contentId) {
         await NotificationService.cancelNotifications(contentId);
       }
@@ -59,7 +55,6 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ activeTheme }) => {
     }
   };
   const renderFavoriteItem = ({ item }: { item: any }) => {
-    // Veri yapısı JobData veya ItemData olabilir (İş veya Etkinlik)
     const data = item.jobData || item.itemData;
     const isJob = item.type !== 'event';
 
@@ -88,7 +83,6 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ activeTheme }) => {
     <SafeAreaView style={[styles.container, { backgroundColor: activeTheme.background }]}>
       <StatusBar barStyle="dark-content" />
 
-      {/* BAŞLIK */}
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: activeTheme.text }]}>Favorilerim</Text>
         <Text style={[styles.headerSubtitle, { color: activeTheme.textSecondary }]}>

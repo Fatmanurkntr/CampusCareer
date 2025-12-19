@@ -5,7 +5,6 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export const UserController = {
   
-  // 1. Kullanıcı Bilgilerini Çekme
   getUserData: async () => {
     try {
       const user = auth.currentUser;
@@ -19,14 +18,13 @@ export const UserController = {
     }
   },
 
-  // 2. Profil Güncelleme (Okul, Bölüm, Ghost Mode)
   updateProfile: async (data) => {
     try {
       const user = auth.currentUser;
       const userRef = doc(db, "users", user.uid);
       
       await updateDoc(userRef, {
-        ...data, // school, department, bio, ghostMode vb.
+        ...data, 
         updatedAt: new Date()
       });
       return { success: true };
@@ -35,24 +33,18 @@ export const UserController = {
     }
   },
 
-  // 3. CV Yükleme (En Kritik Kısım)
   uploadCV: async (fileUri) => {
     try {
       const user = auth.currentUser;
-      // Blob oluşturma (React Native'de dosya okuma işlemi)
       const response = await fetch(fileUri);
       const blob = await response.blob();
 
-      // Storage referansı: cvs/kullaniciID/cv.pdf
       const storageRef = ref(storage, `cvs/${user.uid}/my_cv.pdf`);
       
-      // Yükleme işlemi
       await uploadBytes(storageRef, blob);
       
-      // Yüklenen dosyanın linkini alma
       const downloadUrl = await getDownloadURL(storageRef);
 
-      // Linki Firestore'a kaydetme
       await updateDoc(doc(db, "users", user.uid), {
         cvUrl: downloadUrl
       });

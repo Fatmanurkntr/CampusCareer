@@ -15,18 +15,15 @@ const EventDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) 
 
     const item = route.params?.item || route.params?.job;
 
-    // 🔥 SİSTEM HEADER GİZLEME
     useLayoutEffect(() => {
         navigation.setOptions({ headerShown: false });
     }, [navigation]);
 
-    // Hooklar yukarıda olmalı
     const [isFavorite, setIsFavorite] = useState(false);
     const [isJoined, setIsJoined] = useState(false);
     const [loading, setLoading] = useState(true);
     const currentUser = auth().currentUser;
 
-    // Veri kontrolü ve erken return (Hooklardan SONRA olmalı, ama state kullandığı için useEffect içinde kontrol ediyoruz)
     useEffect(() => {
         if (!currentUser || !item?.id) {
             setLoading(false);
@@ -119,7 +116,6 @@ const EventDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) 
             </ScrollView>
 
             <View style={[styles.footer, { backgroundColor: activeTheme.background, borderTopColor: activeTheme.surface }]}>
-                {/* 1. KATIL BUTONU (Solda Büyük) */}
                 <TouchableOpacity
                     style={[styles.actionBtn, { backgroundColor: isJoined ? "#10B981" : activeTheme.primary }]}
                     onPress={handleJoinEvent}
@@ -129,7 +125,6 @@ const EventDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) 
                     <Text style={styles.btnTxt}>{isJoined ? "Listeye Eklendi" : "Etkinliğe Katıl"}</Text>
                 </TouchableOpacity>
 
-                {/* 2. LİNK BUTONU (Sağda Küçük - SADECE LİNK VARSA) */}
                 {item?.eventLink && (
                     <TouchableOpacity
                         style={[styles.linkBtn, { borderColor: activeTheme.primary }]}

@@ -1,7 +1,6 @@
 // src/screens/Auth/Profile/ProfileScreen.tsx
 
 import React, { useState, useEffect } from 'react';
-// En üstteki satırı şöyle güncelle:
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, Alert } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
@@ -39,9 +38,7 @@ const ProfileScreen = ({ route, navigation }: any) => {
                 const apps = snap?.docs.map(doc => doc.data()) || [];
 
                 setCounts({
-                    // Başvuru kutusunda her şeyin toplamını gösteriyoruz
                     totalApps: apps.length,
-                    // Etkinlik kutusunda sadece etkinlikleri sayıyoruz
                     events: apps.filter(a => a.type === 'event').length
                 });
                 setLoading(false);
@@ -57,7 +54,6 @@ const ProfileScreen = ({ route, navigation }: any) => {
             <StatusBar barStyle="dark-content" />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
 
-                {/* 🔥 GÜNCELLENEN HEADER KISMI: GERİ BUTONU EKLENDİ */}
                 <View style={styles.headerRow}>
                     <View style={styles.headerLeft}>
                         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -84,7 +80,6 @@ const ProfileScreen = ({ route, navigation }: any) => {
                 </View>
 
                 <View style={styles.statsContainer}>
-                    {/* BAŞVURU KUTUSU */}
                     <TouchableOpacity
                         style={[styles.statBox, { backgroundColor: activeTheme.surface }]}
                         onPress={() => navigation.navigate('Dashboard', {
@@ -96,7 +91,6 @@ const ProfileScreen = ({ route, navigation }: any) => {
                         <Text style={styles.statLabel}>Başvuru</Text>
                     </TouchableOpacity>
 
-                    {/* ETKİNLİK KUTUSU */}
                     <TouchableOpacity
                         style={[styles.statBox, { backgroundColor: activeTheme.surface }]}
                         onPress={() => navigation.navigate('Dashboard', {
@@ -148,10 +142,9 @@ const styles = StyleSheet.create({
     container: { flex: 1 },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
-    // 🔥 GÜNCELLENEN HEADER STİLİ
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 25, alignItems: 'center' },
-    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 }, // Ok ve Yazıyı yan yana tutar
-    backBtn: { paddingRight: 5 }, // Tıklama alanını rahatlatmak için
+    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    backBtn: { paddingRight: 5 }, 
 
     title: { fontSize: 28, fontWeight: 'bold' },
     profileInfo: { alignItems: 'center', marginBottom: 20 },

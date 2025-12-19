@@ -2,15 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemeColors } from '../../theme/types';
 
-// Kartın alacağı veri tipi
 export interface PendingJob {
   id: string;
   title: string;
   company: string;
-  postedBy: string; // İlanı giren öğrenci/firma ID'si
+  postedBy: string; 
   date: string;
   description: string;
-  category?: string; // 🔥 YENİ: Kategori bilgisini buraya ekledik
+  category?: string; 
 }
 
 interface Props {
@@ -24,10 +23,10 @@ const JobApprovalCard: React.FC<Props> = ({ item, activeTheme, onApprove, onReje
   return (
     <View style={[styles.card, { backgroundColor: activeTheme.surface }]}>
 
-      {/* Üst Bilgi */}
+      
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
-          {/* 🔥 YENİ: Kategori Rozeti */}
+          
           {item.category && (
             <View style={[styles.catBadge, { backgroundColor: activeTheme.primary + '20' }]}>
               <Text style={[styles.catText, { color: activeTheme.primary }]}>
@@ -48,7 +47,6 @@ const JobApprovalCard: React.FC<Props> = ({ item, activeTheme, onApprove, onReje
         {item.description}
       </Text>
 
-      {/* Aksiyon Butonları */}
       <View style={styles.actions}>
         <TouchableOpacity
           style={[styles.btn, styles.btnReject]}
@@ -74,11 +72,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     padding: 16,
     borderRadius: 16,
-    // Hafif gölge
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  // 🔥 YENİ: Kategori stilleri
   catBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginBottom: 6 },
   catText: { fontSize: 10, fontWeight: '700' },
 

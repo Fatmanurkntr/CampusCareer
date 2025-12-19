@@ -2,9 +2,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { Alert } from 'react-native';
 
-/**
- * Kullanıcı Girişi
- */
+
 export const loginUser = async (email, password, mode) => { 
     console.log(`${mode} girişi yapılıyor...`);
     try {
@@ -19,9 +17,7 @@ export const loginUser = async (email, password, mode) => {
     }
 };
 
-/**
- * Çıkış Yapma
- */
+
 export const logoutUser = async () => {
     try {
         await auth().signOut();
@@ -31,25 +27,20 @@ export const logoutUser = async () => {
     }
 };
 
-/**
- * KAYIT OLMA (Frontend verilerini veritabanına bağlayan kısım)
- */
+
 export const registerUser = async (email, password, role, additionalData) => {
     try {
-        // 1. Kullanıcıyı oluştur
         const userCredential = await auth().createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // 2. Temel veriyi hazırla
         let dbData = {
             uid: user.uid,
             email: email,
-            role: role, // 'student' veya 'company'
+            role: role, 
             createdAt: firestore.FieldValue.serverTimestamp(),
             profileImage: null,
         };
 
-        // 3. Rolüne göre (Öğrenci veya Şirket) ek verileri kaydet
         if (role === 'student') {
             dbData = {
                 ...dbData,
@@ -70,16 +61,13 @@ export const registerUser = async (email, password, role, additionalData) => {
             };
         }
 
-        // 4. Veritabanına yaz
+        
         await firestore().collection('Users').doc(user.uid).set(dbData);
 
         console.log('Kullanıcı ve detayları başarıyla kaydedildi.');
 
-        // 👇 EKLENEN KISIM BURASI 👇
-        // Bu iki satır mail gönderip kullanıcıyı giriş ekranına atar.
         await user.sendEmailVerification();
         await auth().signOut(); 
-        // 👆 EKLENEN KISIM BURASI 👆
 
         return user;
     } catch (error) {
@@ -89,9 +77,7 @@ export const registerUser = async (email, password, role, additionalData) => {
     }
 };
 
-/**
- * Profil Getirme (Profil Sayfasında veriyi göstermek için)
- */
+
 export const getUserProfile = async (uid) => {
     try {
         const userDoc = await firestore().collection('Users').doc(uid).get();
@@ -106,9 +92,7 @@ export const getUserProfile = async (uid) => {
     }
 };
 
-/**
- * Profil Güncelleme (Ayarlar Sayfası için)
- */
+
 export const updateUserProfile = async (uid, data) => {
     try {
         await firestore().collection('Users').doc(uid).update({

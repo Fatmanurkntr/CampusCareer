@@ -4,7 +4,6 @@ import Feather from 'react-native-vector-icons/Feather';
 import firestore from '@react-native-firebase/firestore';
 
 const AdminDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) => {
-    // 🛡️ GÜVENLİK: Parametre yoksa sayfayı çökertme, geri gönder
     const item = route.params?.item;
     const activeTheme = propsTheme || { background: '#FFFFFF', text: '#111827', textSecondary: '#6B7280', primary: '#7C3AED', surface: '#F9FAFB' };
 
@@ -71,7 +70,6 @@ const AdminDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) 
                 </View>
             </ScrollView>
 
-            {/* BUTONLAR: Sadece beklemedeyse göster */}
             {(!item.status || item.status === 'pending') && (
                 <View style={[styles.footer, { backgroundColor: activeTheme.background }]}>
                     <TouchableOpacity style={[styles.btn, styles.rejectBtn]} onPress={() => handleUpdateStatus('rejected')}>

@@ -5,7 +5,6 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-nati
 import { ThemeColors } from '../theme/types';
 
 const { width } = Dimensions.get('window');
-// Ekrana yaklaşık 3.5 tane sığacak şekilde kare boyut
 const CARD_SIZE = width * 0.28;
 
 interface QuickAccessProps {
@@ -28,7 +27,6 @@ const QuickAccessCard: React.FC<QuickAccessProps> = ({ title, icon, color, activ
         <Text style={styles.title}>{title}</Text>
       </View>
 
-      {/* Dekoratif Hafif Parlama */}
       <View style={styles.circleDecoration} />
     </TouchableOpacity>
   );
@@ -36,14 +34,14 @@ const QuickAccessCard: React.FC<QuickAccessProps> = ({ title, icon, color, activ
 
 const styles = StyleSheet.create({
   card: {
-    width: '100%', // Kapsayıcısının genişliğini doldursun
-    aspectRatio: 1, // KARE OLSUN (Genişlik = Yükseklik)
+    width: '100%', 
+    aspectRatio: 1, 
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
 
-    // Gölge
+    
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -52,17 +50,17 @@ const styles = StyleSheet.create({
   },
   content: {
     zIndex: 2,
-    alignItems: 'center', // Yazı ve ikonu ortala
+    alignItems: 'center', 
   },
   icon: {
-    fontSize: 28, // İkonu biraz büyüttük
+    fontSize: 28, 
     marginBottom: 8,
   },
   title: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 14,
-    textAlign: 'center', // Uzun yazı olursa ortalasın
+    textAlign: 'center', 
   },
   circleDecoration: {
     position: 'absolute',

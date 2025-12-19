@@ -20,7 +20,6 @@ const JobDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) =>
     const { item, job: paramJob } = route.params || {};
     const job = item || paramJob;
 
-    // 🔥 SİSTEM HEADER GİZLEME
     useLayoutEffect(() => {
         navigation.setOptions({ headerShown: false });
     }, [navigation]);
@@ -38,7 +37,6 @@ const JobDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) =>
     const [loading, setLoading] = useState(true);
     const currentUser = auth().currentUser;
 
-    // Firma ilanı mı API mi?
     const isCompanyJob = !!job.companyId;
 
     useEffect(() => {
@@ -65,7 +63,6 @@ const JobDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) =>
             const query = await favRef.where('userId', '==', currentUser.uid).where('jobId', '==', job.id).get();
 
             if (query.empty) {
-                // 1. Veritabanına Ekle
                 await favRef.add({
                     userId: currentUser.uid,
                     jobId: job.id,
@@ -74,20 +71,15 @@ const JobDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) =>
                     addedAt: firestore.FieldValue.serverTimestamp()
                 });
 
-                // 2. 🔥 ANLIK BİLDİRİM GÖNDER (FeedScreen'de olduğu gibi)
-                // Bu satır sayesinde butona basar basmaz "Favorilere Eklendi" bildirimi alırsınız.
                 await NotificationService.displayImmediateNotification(job.title);
 
-                // 3. Akıllı Planlamayı Başlat
                 await NotificationService.scheduleSmartNotifications(job);
 
             } else {
-                // Favoriden Çıkarma
                 const batch = firestore().batch();
                 query.docs.forEach(doc => batch.delete(doc.ref));
                 await batch.commit();
 
-                // Bildirimleri İptal Et
                 await NotificationService.cancelNotifications(job.id);
             }
         } catch (error) {
@@ -144,10 +136,8 @@ const JobDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) =>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={toggleFavorite}>
                     <Feather
-                        // 🔥 heart-outline yerine sadece heart kullanıyoruz
                         name="heart"
                         size={26}
-                        // Favori ise kırmızı, değilse tema rengi
                         color={isFavorite ? "#EF4444" : activeTheme.text}
                     />
                 </TouchableOpacity>
@@ -181,10 +171,8 @@ const JobDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) =>
                 </View>
             </ScrollView>
 
-            {/* 🔥 YENİLENMİŞ FOOTER (Event Stili) */}
             <View style={[styles.footer, { backgroundColor: activeTheme.background, borderTopColor: activeTheme.surface }]}>
 
-                {/* Sol Taraf: Başvur Butonu (Her zaman var) */}
                 <TouchableOpacity
                     style={[styles.actionBtn, { backgroundColor: isApplied ? "#10B981" : activeTheme.primary }]}
                     onPress={handleApply}
@@ -194,7 +182,6 @@ const JobDetailScreen = ({ route, navigation, activeTheme: propsTheme }: any) =>
                     <Text style={styles.btnTxt}>{isApplied ? (isCompanyJob ? "Başvuruldu" : "Eklendi") : (isCompanyJob ? "Hemen Başvur" : "Listeme Ekle")}</Text>
                 </TouchableOpacity>
 
-                {/* Sağ Taraf: Link Butonu (SADECE API İLANLARINDA ve LINK VARSA) */}
                 {!isCompanyJob && (job.link || job.applicationLink) && (
                     <TouchableOpacity
                         style={[styles.linkBtn, { borderColor: activeTheme.primary }]}
@@ -225,7 +212,6 @@ const styles = StyleSheet.create({
     sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
     description: { fontSize: 15, lineHeight: 24 },
 
-    // 🔥 FOOTER (Event ile Birebir Aynı)
     footer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, flexDirection: 'row', gap: 10, borderTopWidth: 1 },
     actionBtn: { flex: 1, height: 60, borderRadius: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
     linkBtn: { width: 60, height: 60, borderRadius: 20, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },

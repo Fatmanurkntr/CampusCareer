@@ -1,7 +1,6 @@
 // src/data/mockJobs.ts
 import { JobPost } from '../components/JobCard';
 
-// Gerçek hayattan örnek ilanlar
 export const JOBS: JobPost[] = [
   {
     id: '1',

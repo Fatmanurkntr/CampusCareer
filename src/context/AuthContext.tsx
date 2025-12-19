@@ -5,10 +5,9 @@ import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'; // Fireba
 import { AuthMode } from '../types/auth';
 import { Alert } from 'react-native';
 
-// UserProfile artık sadece örnek için burada. Profil ekranı kendi verisini çekecek.
 interface AuthContextType {
     isAuthenticated: boolean;
-    user: FirebaseAuthTypes.User | null; // Firebase User objesi
+    user: FirebaseAuthTypes.User | null; 
     userRole: AuthMode | null;
     login: (role: AuthMode) => Promise<void>;
     logout: () => Promise<void>;
@@ -43,13 +42,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // KRİTİK ADIM: Firebase Oturum Durumunu Dinleme
     React.useEffect(() => {
         const subscriber = auth().onAuthStateChanged(async (currentUser) => {
             setUser(currentUser);
 
             if (currentUser) {
-                // Sadece rolü AsyncStorage'dan yükle
                 const storedRole = await AsyncStorage.getItem('userRole') as AuthMode | null;
                 setUserRole(storedRole);
             } else {

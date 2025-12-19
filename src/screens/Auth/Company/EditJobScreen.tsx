@@ -10,11 +10,9 @@ const PURPLE_COLOR = '#7C3AED';
 const EditEventScreen = ({ route, navigation }: any) => {
     const { event } = route.params;
     
-    // State tanımlamaları
     const [title, setTitle] = useState(event.title);
     const [date, setDate] = useState(event.date);
     const [location, setLocation] = useState(event.location);
-    // 🔥 HAFIZADAKİ VERİ: Etkinlik linki düzenleme alanı eklendi
     const [eventLink, setEventLink] = useState(event.eventLink || '');
     const [description, setDescription] = useState(event.description);
     const [loading, setLoading] = useState(false);
@@ -31,7 +29,7 @@ const EditEventScreen = ({ route, navigation }: any) => {
                 title, 
                 date, 
                 location, 
-                eventLink, // 🔥 Veritabanı güncellemesine eklendi
+                eventLink, 
                 description,
                 updatedAt: firestore.FieldValue.serverTimestamp(),
             });
@@ -40,7 +38,7 @@ const EditEventScreen = ({ route, navigation }: any) => {
                 { text: "Tamam", onPress: () => navigation.goBack() }
             ]);
         } catch (error) {
-            // 🔥 DÜZELTİLDİ: 'error' değişkeni konsola yazılarak hata giderildi
+            
             console.error("Güncelleme Hatası:", error);
             Alert.alert("HATA", "Güncelleme başarısız oldu.");
         } finally {
@@ -68,7 +66,6 @@ const EditEventScreen = ({ route, navigation }: any) => {
                 <Text style={styles.label}>KONUM</Text>
                 <TextInput style={styles.input} value={location} onChangeText={setLocation} />
 
-                {/* 🔥 HAFIZADAKİ VERİ: Yeni Link Girişi */}
                 <Text style={styles.label}>KATILIM LİNKİ</Text>
                 <TextInput 
                     style={styles.input} 

@@ -6,7 +6,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
 import Feather from 'react-native-vector-icons/Feather';
 
-// SAYFALAR
 import FeedScreen from '../screens/Home/FeedScreen';
 import SearchScreen from '../screens/search/SearchScreen'; 
 import ProfileScreen from '../screens/Auth/Profile/ProfileScreen'; 
@@ -15,12 +14,10 @@ import FavoritesScreen from '../screens/Favorites/FavoritesScreen';
 import ApplicationsScreen from '../screens/Applications/ApplicationsScreen';
 import JobDetailScreen from '../screens/Jobs/JobDetailScreen'; 
 
-// 🔥 DÜZELTİLDİ: Dosya yolundaki Büyük 'E' hassasiyeti ve import tipi
 import EventDetailScreen from '../screens/Events/EventDetailScreen';
 
 import { ThemeProps, ThemeColors } from '../theme/types';
 
-// --- TİP TANIMLARI ---
 export type StudentStackParamList = {
     Dashboard: undefined; 
     Settings: { activeTheme: ThemeColors; currentUser: any; onUpdate?: (newData: any) => void };
@@ -39,8 +36,6 @@ export type TabParamList = {
 const Stack = createNativeStackNavigator<StudentStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
-// --- 🔥 DÜZELTİLDİ: "UNSTABLE NESTED COMPONENT" ÇÖZÜMÜ ---
-// İkon fonksiyonunu ana bileşenin tamamen dışına taşıyarak ESLint hatasını giderdik.
 const getTabBarIcon = (routeName: string, color: string) => {
     let iconName = '';
     switch (routeName) {
@@ -53,7 +48,6 @@ const getTabBarIcon = (routeName: string, color: string) => {
     return <Feather name={iconName} size={24} color={color} />;
 };
 
-// --- BÖLÜM 1: ALT MENÜ (TABS) ---
 const BottomTabs: React.FC<ThemeProps> = ({ activeTheme }) => {
     const insets = useSafeAreaInsets(); 
     
@@ -72,7 +66,6 @@ const BottomTabs: React.FC<ThemeProps> = ({ activeTheme }) => {
                 },
                 tabBarActiveTintColor: activeTheme.primary,
                 tabBarInactiveTintColor: activeTheme.textSecondary,
-                // 🔥 DÜZELTİLDİ: Referans olarak dışarıdaki fonksiyonu çağırıyoruz
                 tabBarIcon: ({ color }) => getTabBarIcon(route.name, color),
             })}
         >
@@ -92,7 +85,6 @@ const BottomTabs: React.FC<ThemeProps> = ({ activeTheme }) => {
     );
 };
 
-// --- BÖLÜM 2: ÖĞRENCİ YIĞINI (STACK) ---
 const StudentStack: React.FC<ThemeProps> = ({ activeTheme }) => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}> 
@@ -100,7 +92,6 @@ const StudentStack: React.FC<ThemeProps> = ({ activeTheme }) => {
                 {() => <BottomTabs activeTheme={activeTheme} />}
             </Stack.Screen>
 
-            {/* NAVIGATE HATASINI ÇÖZEN EKRAN TANIMLARI */}
             <Stack.Screen 
                 name="JobDetail" 
                 options={{ 

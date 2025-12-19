@@ -1,16 +1,14 @@
 // src/utils/uiHelpers.ts
 
-// Profesyonel Pastel Renk Paletleri
 const PREMIUM_PALETTES = [
-    { bg: '#DBEAFE', text: '#1E40AF' }, // Mavi
-    { bg: '#FCE7F3', text: '#9D174D' }, // Pembe
-    { bg: '#D1FAE5', text: '#065F46' }, // Yeşil
-    { bg: '#FEF3C7', text: '#92400E' }, // Turuncu
-    { bg: '#E0E7FF', text: '#3730A3' }, // İndigo
-    { bg: '#F3F4F6', text: '#374151' }, // Gri
+    { bg: '#DBEAFE', text: '#1E40AF' }, 
+    { bg: '#FCE7F3', text: '#9D174D' }, 
+    { bg: '#D1FAE5', text: '#065F46' }, 
+    { bg: '#FEF3C7', text: '#92400E' }, 
+    { bg: '#E0E7FF', text: '#3730A3' }, 
+    { bg: '#F3F4F6', text: '#374151' }, 
 ];
 
-// İsme göre sabit bir renk paleti döndürür
 export const getAvatarStyle = (name: string) => {
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
@@ -20,7 +18,6 @@ export const getAvatarStyle = (name: string) => {
     return PREMIUM_PALETTES[index];
 };
 
-// Baş harf fonksiyonu (Aynı kalabilir)
 export const getInitials = (name: string) => {
     if (!name) return "?";
     const names = name.split(' ');

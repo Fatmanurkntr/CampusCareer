@@ -17,7 +17,6 @@ import Feather from 'react-native-vector-icons/Feather';
 import CustomButton from '../../components/CustomButton';
 import { ThemeColors } from '../../theme/types';
 import { useAuth } from '../../context/AuthContext';
-// @ts-ignore
 import { loginUser, logoutUser } from '../../services/auth';
 import { validateEmail } from '../../utils/validation';
 import { AuthMode } from '../../types/auth';
@@ -74,7 +73,6 @@ const LoginScreen = ({ route, navigation }: any) => {
                 style={styles.keyboardView}
             >
 
-                {/* 0. SEGMENTED CONTROL */}
                 <View style={styles.segmentControlContainer}>
                     <TouchableOpacity
                         style={[styles.segmentButton, mode === 'student' && { backgroundColor: currentTheme.primary }]}
@@ -95,7 +93,6 @@ const LoginScreen = ({ route, navigation }: any) => {
                     </TouchableOpacity>
                 </View>
 
-                {/* 1. HEADER & LOGO ALANI */}
                 <View style={styles.headerContainer}>
                     <View style={[styles.logoPlaceholder, { backgroundColor: currentTheme.surface }]}>
                         <Feather
@@ -114,10 +111,8 @@ const LoginScreen = ({ route, navigation }: any) => {
                     </Text>
                 </View>
 
-                {/* 2. FORM ALANI */}
                 <View style={styles.formContainer}>
 
-                    {/* Email Input */}
                     <View style={[styles.inputContainer, { backgroundColor: currentTheme.surface }]}>
                         <Feather name="mail" size={18} color={currentTheme.textSecondary} style={{ marginRight: 10 }} />
                         <TextInput
@@ -131,7 +126,6 @@ const LoginScreen = ({ route, navigation }: any) => {
                         />
                     </View>
 
-                    {/* Şifre Input */}
                     <View style={[styles.inputContainer, { backgroundColor: currentTheme.surface }]}>
                         <Feather name="lock" size={18} color={currentTheme.textSecondary} style={{ marginRight: 10 }} />
                         <TextInput

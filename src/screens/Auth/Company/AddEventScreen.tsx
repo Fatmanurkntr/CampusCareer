@@ -9,7 +9,7 @@ import auth from '@react-native-firebase/auth';
 const COLORS = {
     background: '#F8F9FA',
     white: '#FFFFFF',
-    primary: '#7C3AED', // Projenin ana mor teması
+    primary: '#7C3AED', 
     text: '#111827',
     border: '#E5E7EB'
 };
@@ -17,13 +17,13 @@ const COLORS = {
 const AddEventScreen = ({ navigation }: any) => {
     const [title, setTitle] = useState('');
     const [date, setDate] = useState('');
-    const [location, setLocation] = useState(''); // 🔥 Artık kullanılıyor
+    const [location, setLocation] = useState(''); 
     const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(false);
     const [deadline, setDeadline] = useState('');
 
     const handlePostEvent = async () => {
-        // Form doğrulaması
+        
         if (!title || !date || !location) {
             Alert.alert("Eksik Bilgi", "Lütfen etkinlik adı, tarih, konum ve kayıt linkini doldurun.");
             return;
@@ -33,7 +33,7 @@ const AddEventScreen = ({ navigation }: any) => {
         const currentUser = auth().currentUser;
 
         try {
-            // Şirket adını güncel çekmek için kullanıcı dokümanına erişim
+            
             const userDoc = await firestore().collection('Users').doc(currentUser?.uid).get();
             const userData = userDoc.data();
             const finalDeadline = deadline || date;
@@ -44,9 +44,9 @@ const AddEventScreen = ({ navigation }: any) => {
                 title: title,
                 date: date,
                 deadlineDate: finalDeadline,
-                location: location, // 🔥 Veritabanına ekleniyor
+                location: location, 
                 description: description,
-                status: 'pending', // Admin onayı bekleyen durum
+                status: 'pending', 
                 participantCount: 0,
                 views: 0,
                 createdAt: firestore.FieldValue.serverTimestamp(),
@@ -87,7 +87,6 @@ const AddEventScreen = ({ navigation }: any) => {
                     placeholder="Boş bırakılırsa etkinlik tarihi baz alınır"
                 />
 
-                {/* 🔥 DÜZELTME: Konum alanı eklendi, setLocation artık kullanılıyor */}
                 <Text style={styles.label}>KONUM / PLATFORM</Text>
                 <TextInput style={styles.input} value={location} onChangeText={setLocation} placeholder="Zoom veya Şişli Yerleşkesi" />
 

@@ -13,23 +13,20 @@ import HorizontalJobCard from '../../components/HorizontalJobCard';
 import QuickAccessCard from '../../components/QuickAccessCard';
 import { useNavigation } from '@react-navigation/native';
 
-// İKONLAR
+
 import Feather from 'react-native-vector-icons/Feather';
 
-// SERVİSLER VE YARDIMCILAR
 import { fetchJobs, fetchEvents } from '../../services/opportunities';
 import { buildSearchQuery } from '../../utils/searchLogic';
 import { getEffectiveDeadline } from '../../utils/dateHelpers';
 
-// 🔥🔥🔥 EKLEME 1: BİLDİRİM SERVİSİ VE NOTIFEE İMPORTLARI 🔥🔥🔥
 import NotificationService from '../../services/NotificationService';
 import notifee from '@notifee/react-native';
-// Rehber İçerik Verisi
 const GUIDE_CONTENTS = {
   cv: {
     title: "Etkili CV Hazırlama Taktikleri",
     icon: "file-text",
-    color: "#2563EB", // Mavi
+    color: "#2563EB",
     items: [
       { id: 1, text: "Tek Sayfa Kuralı: Öğrenciysen veya yeni mezunsan CV'ni tek sayfada tutmaya çalış." },
       { id: 2, text: "ATS Dostu Ol: Tasarım şovları yerine okunabilir, sade fontlar kullan. Robotlar okuyamazsa elenirsin." },
@@ -41,7 +38,7 @@ const GUIDE_CONTENTS = {
   interview: {
     title: "Mülakatın Şifreleri",
     icon: "users",
-    color: "#10B981", // Yeşil
+    color: "#10B981", 
     items: [
       { id: 1, text: "Şirketi Araştır: 'Neden biz?' sorusuna verecek cevabın olsun. Vizyonlarını bildiğini göster." },
       { id: 2, text: "STAR Tekniği: Sorulara 'Durum, Görev, Aksiyon, Sonuç' sırasıyla hikayeleştirerek cevap ver." },
@@ -58,7 +55,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
   const flatListRef = useRef<FlatList>(null);
   const currentUser = auth().currentUser;
 
-  // --- STATE YAPISI ---
   const [activeTab, setActiveTab] = useState('Tümü');
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
@@ -73,26 +69,22 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedGuide, setSelectedGuide] = useState<any>(null);
 
-  // Kart açma fonksiyonu
   const openGuide = (type: 'cv' | 'interview') => {
     setSelectedGuide(GUIDE_CONTENTS[type]);
     setModalVisible(true);
   };
-  // --- KULLANICI PROFİLİ ---
   useEffect(() => {
     if (currentUser) {
       firestore().collection('Users').doc(currentUser.uid).get()
         .then(doc => {
-          // 🔥 HATA BURADAYDI: doc.exists() şeklinde fonksiyon olarak çağırılmalı
           if (doc.exists()) {
             setUserProfile(doc.data());
           }
         })
         .catch(error => console.error("Profil çekme hatası:", error));
     }
-  }, [currentUser]); // currentUser bağımlılığını eklemek daha güvenlidir
+  }, [currentUser]); 
 
-  // --- ONAYLI İLANLARI DİNLE ---
   useEffect(() => {
     setIsRecLoading(true);
     const unsubscribe = firestore()
@@ -143,7 +135,7 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
     return score;
   };
 
-  // --- FAVORİLERİ DİNLE ---
+  
   useEffect(() => {
     if (!currentUser) return;
     const unsubscribe = firestore()
@@ -156,7 +148,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
     return () => unsubscribe();
   }, []);
 
-  // --- SEKTÖREL VERİ ---
   useEffect(() => {
     if (!activeTopic) return;
     const loadData = async () => {
@@ -188,7 +179,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
     loadData();
   }, [activeTab, activeTopic]);
 
-  // FeedScreen.tsx içindeki handleToggleFavorite fonksiyonu
 
   const handleToggleFavorite = async (item: JobPost) => {
     if (!currentUser) {
@@ -204,7 +194,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
         .get();
 
       if (snapshot.empty) {
-        // --- 1. Firestore'a Ekle ---
         await favRef.add({
           userId: currentUser.uid,
           jobId: item.id,
@@ -213,21 +202,17 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
           addedAt: firestore.FieldValue.serverTimestamp()
         });
 
-        // --- 2. 🔥 BİLDİRİM SİSTEMİ (TEK SATIR) ---
-        // Önce anlık bilgi ver
+        
         await NotificationService.displayImmediateNotification(item.title);
 
-        // Sonra akıllı planlamayı başlat (Tüm mantık içeride)
         await NotificationService.scheduleSmartNotifications(item);
 
       } else {
-        // --- Silme ---
         const batch = firestore().batch();
         snapshot.docs.forEach(doc => batch.delete(doc.ref));
         await batch.commit();
 
-        // --- Bildirimleri İptal Et ---
-        // Haftalık döngü dahil hepsini siler
+        
         await NotificationService.cancelNotifications(item.id);
       }
     } catch (error) {
@@ -251,7 +236,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
     (item.title || '').toLowerCase().includes(searchText.toLowerCase()) ||
     (item.company || '').toLowerCase().includes(searchText.toLowerCase())
   );
-  // Liste boşken gösterilecek tasarım
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
       <View style={[styles.emptyIconBox, { backgroundColor: activeTheme.surface }]}>
@@ -362,7 +346,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
                   )}
                 </View>
               ) : (
-                // Sadece burada renderEmptyList kalsın
                 renderEmptyList()
               )
             ) : null}
@@ -420,7 +403,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
               <Text style={[styles.sectionTitle, { color: activeTheme?.text, paddingHorizontal: 20, marginBottom: 15 }]}>Popüler Şirketler</Text>
               <FlatList
                 data={[
-                  // 🔥 DEĞİŞİKLİK 1: Link yerine 'require' kullanıyoruz
                   { id: 'c1', name: 'Trendyol', logo: require('../../assets/logos/trendyol.png') },
                   { id: 'c2', name: 'Google', logo: require('../../assets/logos/google.png') },
                   { id: 'c3', name: 'Getir', logo: require('../../assets/logos/getir.png') }
@@ -429,7 +411,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
                   <View style={{ alignItems: 'center', marginRight: 20 }}>
                     <View style={[styles.companyLogoBox, { borderColor: activeTheme?.surface, backgroundColor: '#fff' }]}>
 
-                      {/* 🔥 DEĞİŞİKLİK 2: 'uri' süslü parantezlerini kaldırdık, direkt item.logo veriyoruz */}
                       <Image
                         source={item.logo}
                         style={{ width: 35, height: 35 }}
@@ -446,8 +427,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
                 contentContainerStyle={{ paddingHorizontal: 20, marginBottom: 40 }}
               />
             </View>
-            {/* --- EKSİK OLAN KISIM: KARİYER REHBERİ --- */}
-            {/* --- KARİYER REHBERİ --- */}
             <View style={[styles.sectionContainer, { marginBottom: 100 }]}>
               <Text style={[styles.sectionTitle, { color: activeTheme?.text, paddingHorizontal: 20, marginBottom: 15 }]}>
                 Kariyer Rehberi
@@ -458,7 +437,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 20 }}
               >
-                {/* 1. KART: CV Hazırlama */}
                 <TouchableOpacity
                   style={[styles.guideCard, { backgroundColor: activeTheme?.surface }]}
                   onPress={() => openGuide('cv')} // 🔥 BURASI EKLENDİ
@@ -478,7 +456,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
                   </View>
                 </TouchableOpacity>
 
-                {/* 2. KART: Mülakat */}
                 <TouchableOpacity
                   style={[styles.guideCard, { backgroundColor: activeTheme?.surface }]}
                   onPress={() => openGuide('interview')} // 🔥 BURASI EKLENDİ
@@ -503,7 +480,6 @@ const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => 
           </View>
         }
       />
-      {/* 🔥 MODAL PENCERESİ (Bunu SafeAreaView kapanmadan hemen önceye koy) */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -559,10 +535,8 @@ const styles = StyleSheet.create({
   guideCard: { width: 180, height: 90, borderRadius: 20, padding: 16, marginRight: 16, flexDirection: 'row', alignItems: 'center', gap: 12, elevation: 2 },
   guideTitle: { fontSize: 14, fontWeight: '700', color: '#1F2937' },
 
-  // 🔥 DÜZELTME BURADA: guideSubtitle sonuna virgül eklendi
   guideSubtitle: { fontSize: 12, color: '#6B7280' },
 
-  // --- MODAL STİLLERİ ---
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -617,7 +591,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-    // Hafif gölge
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,

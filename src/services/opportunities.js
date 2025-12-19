@@ -2,7 +2,6 @@
 import axios from 'axios';
 import * as Secrets from '../config/secrets';
 
-// --- İŞ VE STAJ İLANLARI (Arkadaşının Orijinal POST Mantığı) ---
 export const fetchJobs = async (query, category = 'Tümü') => {
     try {
         const response = await axios.post(`https://${Secrets.RAPID_API_HOST}/getjobs`,
@@ -39,11 +38,9 @@ export const fetchJobs = async (query, category = 'Tümü') => {
     }
 };
 
-// --- ETKİNLİKLER (8 Sonuç Veren Sade SerpApi) ---
 export const fetchEvents = async (query) => {
     try {
         console.log(`🎉 EVENTS İSTEĞİ: "${query}"`);
-        // Geri alındı: En sade URL (hl=tr kısıtlaması kaldırıldı)
         const url = `https://serpapi.com/search.json?engine=google_events&q=${encodeURIComponent(query)}&api_key=${Secrets.SERP_API_KEY}`;
         const response = await fetch(url);
         const json = await response.json();

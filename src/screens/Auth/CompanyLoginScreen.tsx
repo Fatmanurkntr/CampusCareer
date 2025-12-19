@@ -4,13 +4,12 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, StatusBar } from 'react-native';
 import CustomButton from '../../components/CustomButton';
 
-// 💡 KURUMSAL TEMA (Primary: Koyu Mavi)
 const COMPANY_THEME = {
     background: '#FFFFFF',
-    text: '#1F2937',      // Koyu Antrasit
-    textSecondary: '#6B7280', // Gri
-    primary: '#007AFF',   // Kurumsal Mavi
-    surface: '#F3F4F6',   // Çok açık gri zemin
+    text: '#1F2937',      
+    textSecondary: '#6B7280', 
+    primary: '#007AFF',   
+    surface: '#F3F4F6',  
 };
 
 const CompanyLoginScreen: React.FC = ({ navigation }: any) => {
@@ -18,7 +17,7 @@ const CompanyLoginScreen: React.FC = ({ navigation }: any) => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     
-    // Öğrenci girişine dönmek için
+    
     const goToStudentLogin = () => {
         navigation.goBack(); 
     };
@@ -26,7 +25,6 @@ const CompanyLoginScreen: React.FC = ({ navigation }: any) => {
     const handleCompanyLogin = () => {
         setLoading(true);
         console.log('Firma Girişi:', email);
-        // İleride buraya Firebase fonksiyonu gelecek
         setTimeout(() => setLoading(false), 2000); 
     };
 
@@ -44,7 +42,6 @@ const CompanyLoginScreen: React.FC = ({ navigation }: any) => {
 
             <View style={styles.formContainer}>
                 
-                {/* E-POSTA */}
                 <TextInput
                     style={[styles.input, { backgroundColor: COMPANY_THEME.surface, color: COMPANY_THEME.text }]}
                     placeholder="Şirket E-postası"
@@ -55,7 +52,6 @@ const CompanyLoginScreen: React.FC = ({ navigation }: any) => {
                     autoCapitalize="none"
                 />
 
-                {/* ŞİFRE */}
                 <TextInput
                     style={[styles.input, { backgroundColor: COMPANY_THEME.surface, color: COMPANY_THEME.text }]}
                     placeholder="Şifre"
@@ -65,7 +61,6 @@ const CompanyLoginScreen: React.FC = ({ navigation }: any) => {
                     secureTextEntry
                 />
 
-                {/* GİRİŞ BUTONU (Mavi) */}
                 <CustomButton
                     title="Firma Girişi Yap"
                     onPress={handleCompanyLogin}
@@ -79,7 +74,6 @@ const CompanyLoginScreen: React.FC = ({ navigation }: any) => {
                 </TouchableOpacity>
             </View>
 
-            {/* ALT KISIM */}
             <View style={styles.footer}>
                 <TouchableOpacity onPress={goToStudentLogin} style={styles.switchButton}>
                     <Text style={{ fontSize: 16 }}>🎓</Text>

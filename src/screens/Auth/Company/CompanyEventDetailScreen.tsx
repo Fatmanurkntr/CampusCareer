@@ -7,7 +7,6 @@ const PURPLE_COLOR = '#7C3AED';
 const CompanyEventDetailScreen = ({ route, navigation }: any) => {
     const { event } = route.params;
 
-    // Etkinlik Silme Fonksiyonu
     const handleDelete = () => {
         Alert.alert("ETKİNLİĞİ SİL", "Bu etkinliği kalıcı olarak silmek istediğinize emin misiniz?", [
             { text: "VAZGEÇ", style: "cancel" },
@@ -19,7 +18,6 @@ const CompanyEventDetailScreen = ({ route, navigation }: any) => {
                         await firestore().collection('EventPostings').doc(event.id).delete();
                         navigation.goBack();
                     } catch (error) {
-                        // 🔥 DÜZELTİLDİ: 'error' değişkeni artık kullanılıyor
                         console.error("Silme Hatası:", error);
                         Alert.alert("HATA", "İşlem sırasında bir sorun oluştu.");
                     }
@@ -28,7 +26,6 @@ const CompanyEventDetailScreen = ({ route, navigation }: any) => {
         ]);
     };
 
-    // 🔥 HAFIZADAKİ VERİ: Kayıt linkine gitme fonksiyonu eklendi
     const openEventLink = () => {
         if (event.eventLink) {
             Linking.openURL(event.eventLink).catch(() => {
@@ -65,13 +62,11 @@ const CompanyEventDetailScreen = ({ route, navigation }: any) => {
                         <Text style={styles.infoValue}>{event.date}</Text>
                     </View>
                     
-                    {/* 🔥 HAFIZADAKİ VERİ: Konum alanı AddEventScreen ile senkronize edildi */}
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>KONUM:</Text>
                         <Text style={styles.infoValue}>{event.location || 'Belirtilmedi'}</Text>
                     </View>
 
-                    {/* 🔥 HAFIZADAKİ VERİ: Etkinlik Linki eklendi */}
                     {event.eventLink && (
                         <TouchableOpacity onPress={openEventLink} style={styles.linkContainer}>
                             <Text style={styles.infoLabel}>LİNK:</Text>

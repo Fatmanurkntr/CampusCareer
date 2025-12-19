@@ -60,7 +60,6 @@ const JobCard: React.FC<JobCardProps> = ({
             {item.title}
           </Text>
 
-          {/* 🔥 DÜZELTME: toggleFavorite yerine prop'tan gelen onFavoritePress'i kullanıyoruz */}
           <TouchableOpacity
             onPress={onFavoritePress}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}

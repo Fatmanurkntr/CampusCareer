@@ -2,7 +2,6 @@ import { validateEmail, validatePassword } from './validation';
 
 describe('Validation Kontrolleri', () => {
 
-    // 1. E-POSTA TESTLERİ
     test('Geçerli bir e-posta adresi TRUE dönmeli', () => {
         expect(validateEmail('ogrenci@okul.edu.tr')).toBe(true);
         expect(validateEmail('test@gmail.com')).toBe(true);
@@ -14,7 +13,6 @@ describe('Validation Kontrolleri', () => {
         expect(validateEmail('')).toBe(false);                // Boş
     });
 
-    // 2. ŞİFRE TESTLERİ
     test('6 karakterden uzun şifre TRUE dönmeli', () => {
         expect(validatePassword('123456')).toBe(true);
         expect(validatePassword('guclubirsifre')).toBe(true);

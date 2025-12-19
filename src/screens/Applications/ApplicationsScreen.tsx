@@ -8,7 +8,6 @@ import auth from '@react-native-firebase/auth';
 import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation, useRoute } from '@react-navigation/native'; // 🔥 useRoute eklendi
 
-// --- ALT BİLEŞEN: UYGULAMA KARTI ---
 const ApplicationCard = ({ item, activeTheme, navigation }: any) => {
     const [isFavorite, setIsFavorite] = useState(false);
     const currentUser = auth().currentUser;
@@ -52,7 +51,6 @@ const ApplicationCard = ({ item, activeTheme, navigation }: any) => {
             <TouchableOpacity 
                 style={styles.detailBtn}
                 onPress={() => {
-                    // 🔥 GÜVENLİ VERİ YAPISI: Detay sayfasına mutlaka bir 'id' gönderiyoruz
                     const detailData = { 
                         ...(item.jobData || item), 
                         id: item.jobId || item.id 
@@ -71,19 +69,18 @@ const ApplicationCard = ({ item, activeTheme, navigation }: any) => {
     );
 };
 
-// --- ANA BİLEŞEN: BAŞVURULAR EKRANI ---
 const ApplicationsScreen = ({ activeTheme: propsTheme }: any) => {
   const navigation = useNavigation<any>();
-  const route = useRoute<any>(); // 🔥 route undefined hatası için kanca kullanıldı
+  const route = useRoute<any>(); 
   
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const currentUser = auth().currentUser;
 
-  // 🔥 Tema hatası için koruma
+  
   const activeTheme = propsTheme || { background: '#FFFFFF', text: '#111827', primary: '#7C3AED', surface: '#F9FAFB', textSecondary: '#6B7280' };
 
-  // 🔥 Parametre çekme (route.params kontrolü ile)
+  
   const filterType = route.params?.filterType || 'all';
 
   useEffect(() => {
@@ -111,7 +108,6 @@ const ApplicationsScreen = ({ activeTheme: propsTheme }: any) => {
     return () => unsubscribe();
   }, [currentUser]); 
 
-  // 🔥 LİSTEYİ FİLTRELEME
   const filteredData = applications.filter(item => {
     if (filterType === 'event') {
         return item.type === 'event';
@@ -151,7 +147,6 @@ const ApplicationsScreen = ({ activeTheme: propsTheme }: any) => {
   );
 };
 
-// Stiller aynı kalıyor...
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { padding: 24, paddingTop: 20 },

@@ -15,7 +15,6 @@ const SearchScreen = ({ activeTheme }: any) => {
     const [searchText, setSearchText] = useState('');
     const [loading, setLoading] = useState(true);
     
-    // 🔥 Filtre State'i
     const [activeFilter, setActiveFilter] = useState('Hepsi');
 
     const filters = [
@@ -61,11 +60,9 @@ const SearchScreen = ({ activeTheme }: any) => {
         return () => jobSub();
     }, []);
 
-    // 🔥 Arama ve Filtreleme Mantığı
     useEffect(() => {
         let result = allApprovedData;
 
-        // 1. Metin Filtresi
         if (searchText) {
             result = result.filter(item => 
                 item.title?.toLowerCase().includes(searchText.toLowerCase()) || 
@@ -73,11 +70,9 @@ const SearchScreen = ({ activeTheme }: any) => {
             );
         }
 
-        // 2. Kategori/Tip Filtresi
         if (activeFilter !== 'Hepsi') {
             result = result.filter(item => {
                 if (activeFilter === 'Etkinlik') return item.dataType === 'event';
-                // İlanın içindeki 'type' alanı ile filtre etiketini karşılaştırır
                 return item.type === activeFilter;
             });
         }
@@ -124,7 +119,6 @@ const SearchScreen = ({ activeTheme }: any) => {
             <View style={styles.header}>
                 <Text style={[styles.headerTitle, { color: activeTheme?.text || '#000' }]}>Keşfet</Text>
                 
-                {/* Arama Çubuğu */}
                 <View style={[styles.searchBox, { backgroundColor: activeTheme?.surface || '#F3F4F6' }]}>
                     <Feather name="search" size={20} color="#9CA3AF" />
                     <TextInput 
@@ -136,7 +130,6 @@ const SearchScreen = ({ activeTheme }: any) => {
                     />
                 </View>
 
-                {/* 🔥 Yatay Filtre Çipleri */}
                 <ScrollView 
                     horizontal 
                     showsHorizontalScrollIndicator={false} 
@@ -190,7 +183,7 @@ const styles = StyleSheet.create({
     searchBox: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, borderRadius: 16, height: 54, marginHorizontal: 20 },
     input: { flex: 1, marginLeft: 10, fontWeight: '500', fontSize: 15 },
     
-    // 🔥 Filtre Stilleri
+    
     filterScroll: { marginTop: 15, paddingLeft: 20 },
     filterContent: { paddingRight: 40, gap: 8 },
     chip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, marginRight: 8 },
