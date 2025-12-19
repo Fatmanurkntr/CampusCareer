@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    View, Text, StyleSheet, FlatList, SafeAreaView, 
-    StatusBar, TouchableOpacity, ActivityIndicator 
+import {
+  View, Text, StyleSheet, FlatList, SafeAreaView,
+  StatusBar, TouchableOpacity, ActivityIndicator
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { ThemeColors } from '../../theme/types';
+import NotificationService from '../../services/NotificationService';
 
 interface FavoritesScreenProps {
   activeTheme: ThemeColors;
@@ -42,23 +43,30 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ activeTheme }) => {
   }, []);
 
   // 2. FAVORİDEN KALDIR
-  const removeFavorite = async (favId: string) => {
+
+  const removeFavorite = async (favId: string, contentId: string) => {
     try {
+      // 1. Veritabanından (Firestore) sil
       await firestore().collection('Favorites').doc(favId).delete();
+
+      // 2. Bildirimi iptal et (Mobil)
+      // contentId: İlanın veya etkinliğin gerçek ID'sidir
+      if (contentId) {
+        await NotificationService.cancelNotifications(contentId);
+      }
     } catch (error) {
       console.error("Silme hatası:", error);
     }
   };
-
   const renderFavoriteItem = ({ item }: { item: any }) => {
     // Veri yapısı JobData veya ItemData olabilir (İş veya Etkinlik)
     const data = item.jobData || item.itemData;
     const isJob = item.type !== 'event';
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.card, { backgroundColor: activeTheme.surface }]}
-        onPress={() => navigation.navigate(isJob ? 'JobDetail' : 'EventDetail', { [isJob ? 'job' : 'item']: data })}
+        onPress={() => navigation.navigate(isJob ? 'JobDetail' : 'EventDetail', { item: data })}
       >
         <View style={styles.cardHeader}>
           <View style={[styles.iconBox, { backgroundColor: activeTheme.primary + '15' }]}>
@@ -68,8 +76,8 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ activeTheme }) => {
             <Text style={[styles.title, { color: activeTheme.text }]} numberOfLines={1}>{data?.title}</Text>
             <Text style={[styles.subtitle, { color: activeTheme.textSecondary }]}>{data?.companyName}</Text>
           </View>
-          <TouchableOpacity onPress={() => removeFavorite(item.id)} style={styles.removeBtn}>
-            <Feather name="heart" size={20} color="#EF4444" fill="#EF4444" />
+          <TouchableOpacity onPress={() => removeFavorite(item.id, data?.id)}>
+            <Feather name="heart" size={20} color="#EF4444" />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -79,7 +87,7 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ activeTheme }) => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: activeTheme.background }]}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* BAŞLIK */}
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: activeTheme.text }]}>Favorilerim</Text>

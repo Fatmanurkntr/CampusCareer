@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-    View, Text, TextInput, StyleSheet, ScrollView, 
-    TouchableOpacity, SafeAreaView, Alert, ActivityIndicator, StatusBar 
+import {
+    View, Text, TextInput, StyleSheet, ScrollView,
+    TouchableOpacity, SafeAreaView, Alert, ActivityIndicator, StatusBar
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
@@ -21,13 +21,19 @@ const AddJobScreen = ({ navigation }: any) => {
     const [type, setType] = useState('Staj');
     const [description, setDescription] = useState('');
     const [requirements, setRequirements] = useState(''); // 🔥 Düzeltildi: Artık kullanılıyor
-    const [applicationLink, setApplicationLink] = useState(''); 
     const [loading, setLoading] = useState(false);
+    const [deadline, setDeadline] = useState('');
+    const [category, setCategory] = useState('');
+    const CATEGORIES = [
+        'Yazılım & Bilişim', 'Tasarım & Kreatif', 'Pazarlama & Satış',
+        'Mühendislik', 'Finans & Muhasebe', 'İnsan Kaynakları',
+        'Hukuk', 'Sağlık', 'Operasyon', 'Yönetim'
+    ];
 
     const handlePostJob = async () => {
         // Form doğrulamasına requirements eklendi
-        if (!title || !location || !description || !applicationLink || !requirements) {
-            Alert.alert("Eksik Bilgi", "Lütfen tüm zorunlu alanları doldurun.");
+        if (!title || !location || !description || !requirements || !category) {
+            Alert.alert("Eksik Bilgi", "Lütfen zorunlu alanları (Başlık, Konum, Link vb.) doldurun.");
             return;
         }
 
@@ -46,10 +52,11 @@ const AddJobScreen = ({ navigation }: any) => {
                 type: type,
                 description: description,
                 requirements: requirements, // 🔥 Veritabanına aktarılıyor
-                applicationLink: applicationLink, 
-                status: 'pending', 
-                views: 0, 
-                applicationCount: 0, 
+                category: category,
+                deadlineDate: deadline ? deadline : null,
+                status: 'pending',
+                views: 0,
+                applicationCount: 0,
                 createdAt: firestore.FieldValue.serverTimestamp(),
             });
 
@@ -77,11 +84,36 @@ const AddJobScreen = ({ navigation }: any) => {
                 <Text style={styles.label}>İLAN BAŞLIĞI</Text>
                 <TextInput style={styles.input} placeholder="Örn: React Native Geliştirici" value={title} onChangeText={setTitle} />
 
+                <Text style={styles.label}>İLAN KATEGORİSİ</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 15 }}>
+                    {CATEGORIES.map((cat) => (
+                        <TouchableOpacity
+                            key={cat}
+                            style={[
+                                styles.categoryChip,
+                                category === cat && styles.activeCategoryChip
+                            ]}
+                            onPress={() => setCategory(cat)}
+                        >
+                            <Text style={[
+                                styles.categoryText,
+                                category === cat && styles.activeCategoryText
+                            ]}>{cat}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+
                 <Text style={styles.label}>KONUM</Text>
                 <TextInput style={styles.input} placeholder="Örn: İstanbul / Uzaktan" value={location} onChangeText={setLocation} />
 
-                <Text style={styles.label}>BAŞVURU LİNKİ</Text>
-                <TextInput style={styles.input} placeholder="https://basvuru-adresi.com" value={applicationLink} onChangeText={setApplicationLink} keyboardType="url" autoCapitalize="none" />
+                <Text style={styles.label}>SON BAŞVURU TARİHİ(Opsiyonel)</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="GG.AA.YYYY (Örn: 30.12.2025)"
+                    value={deadline}
+                    onChangeText={setDeadline}
+                    keyboardType="numeric"
+                />
 
                 <Text style={styles.label}>ÇALIŞMA ŞEKLİ</Text>
                 <View style={styles.typeContainer}>
@@ -122,7 +154,29 @@ const styles = StyleSheet.create({
     typeText: { fontSize: 12, fontWeight: '600', color: '#6B7280' },
     activeTypeText: { color: '#FFF' },
     submitButton: { backgroundColor: COLORS.primary, padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 30 },
-    submitButtonText: { color: '#FFF', fontWeight: 'bold' }
-});
+    submitButtonText: { color: '#FFF', fontWeight: 'bold' }, // BURAYA VİRGÜL KOYMAYI UNUTMA
 
+    // --- YENİ EKLENEN KISIMLAR ---
+    categoryChip: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        marginRight: 8,
+        backgroundColor: '#FFF'
+    }, // <-- BURADAKİ VİRGÜL ÖNEMLİ
+    activeCategoryChip: {
+        backgroundColor: '#7C3AED', // Primary Color
+        borderColor: '#7C3AED'
+    },
+    categoryText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#6B7280'
+    },
+    activeCategoryText: {
+        color: '#FFF'
+    }
+});
 export default AddJobScreen;

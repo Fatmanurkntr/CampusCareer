@@ -2,14 +2,14 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'; // Firebase Auth
-import { AuthMode } from '../types/auth'; 
+import { AuthMode } from '../types/auth';
 import { Alert } from 'react-native';
 
 // UserProfile artık sadece örnek için burada. Profil ekranı kendi verisini çekecek.
 interface AuthContextType {
     isAuthenticated: boolean;
     user: FirebaseAuthTypes.User | null; // Firebase User objesi
-    userRole: AuthMode | null; 
+    userRole: AuthMode | null;
     login: (role: AuthMode) => Promise<void>;
     logout: () => Promise<void>;
     isLoading: boolean;
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUserRole(null);
         } catch (error) {
             console.error("Çıkış sırasında hata:", error);
-            Alert.alert('Hata', 'Çıkış işlemi sırasında bir sorun oluştu.'); 
+            Alert.alert('Hata', 'Çıkış işlemi sırasında bir sorun oluştu.');
         }
     };
 
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     React.useEffect(() => {
         const subscriber = auth().onAuthStateChanged(async (currentUser) => {
             setUser(currentUser);
-            
+
             if (currentUser) {
                 // Sadece rolü AsyncStorage'dan yükle
                 const storedRole = await AsyncStorage.getItem('userRole') as AuthMode | null;
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (context === undefined) {
-        throw new Error('useAuth, AuthProvider içinde kullanılmalıdır.'); 
+        throw new Error('useAuth, AuthProvider içinde kullanılmalıdır.');
     }
     return context;
 };

@@ -6,20 +6,20 @@ import { ThemeColors } from '../theme/types';
 
 const { width } = Dimensions.get('window');
 // Ekrana yaklaşık 3.5 tane sığacak şekilde kare boyut
-const CARD_SIZE = width * 0.28; 
+const CARD_SIZE = width * 0.28;
 
 interface QuickAccessProps {
   title: string;
-  icon: string; 
-  color: string; 
+  icon: any;
+  color: string;
   activeTheme: ThemeColors;
   onPress: () => void;
 }
 
 const QuickAccessCard: React.FC<QuickAccessProps> = ({ title, icon, color, activeTheme, onPress }) => {
   return (
-    <TouchableOpacity 
-      style={[styles.card, { backgroundColor: color }]} 
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: color }]}
       onPress={onPress}
       activeOpacity={0.9}
     >
@@ -27,7 +27,7 @@ const QuickAccessCard: React.FC<QuickAccessProps> = ({ title, icon, color, activ
         <Text style={styles.icon}>{icon}</Text>
         <Text style={styles.title}>{title}</Text>
       </View>
-      
+
       {/* Dekoratif Hafif Parlama */}
       <View style={styles.circleDecoration} />
     </TouchableOpacity>
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    
+
     // Gölge
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    color: '#fff', 
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: 14,
     textAlign: 'center', // Uzun yazı olursa ortalasın

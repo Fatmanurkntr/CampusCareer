@@ -1,20 +1,22 @@
 // src/screens/Auth/Profile/ProfileScreen.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
+// En üstteki satırı şöyle güncelle:
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, Alert } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import Feather from 'react-native-vector-icons/Feather';
 
+
 const ProfileScreen = ({ route, navigation }: any) => {
-    const activeTheme = route.params?.activeTheme || { 
-        background: '#FFFFFF', 
-        text: '#111827', 
-        primary: '#7C3AED', 
-        surface: '#F9FAFB', 
-        textSecondary: '#6B7280' 
+    const activeTheme = route.params?.activeTheme || {
+        background: '#FFFFFF',
+        text: '#111827',
+        primary: '#7C3AED',
+        surface: '#F9FAFB',
+        textSecondary: '#6B7280'
     };
-    
+
     const [loading, setLoading] = useState(true);
     const [userData, setUserData] = useState<any>(null);
     const [counts, setCounts] = useState({ totalApps: 0, events: 0 });
@@ -24,7 +26,10 @@ const ProfileScreen = ({ route, navigation }: any) => {
         if (!currentUser) return;
 
         const unsubUser = firestore().collection('Users').doc(currentUser.uid).onSnapshot(doc => {
-            if (doc.exists) setUserData(doc.data());
+
+            if (doc.exists()) {
+                setUserData(doc.data());
+            }
         });
 
         const unsubApps = firestore()
@@ -32,7 +37,7 @@ const ProfileScreen = ({ route, navigation }: any) => {
             .where('userId', '==', currentUser.uid)
             .onSnapshot(snap => {
                 const apps = snap?.docs.map(doc => doc.data()) || [];
-                
+
                 setCounts({
                     // Başvuru kutusunda her şeyin toplamını gösteriyoruz
                     totalApps: apps.length,
@@ -51,8 +56,16 @@ const ProfileScreen = ({ route, navigation }: any) => {
         <SafeAreaView style={[styles.container, { backgroundColor: activeTheme.background }]}>
             <StatusBar barStyle="dark-content" />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+
+                {/* 🔥 GÜNCELLENEN HEADER KISMI: GERİ BUTONU EKLENDİ */}
                 <View style={styles.headerRow}>
-                    <Text style={[styles.title, { color: activeTheme.text }]}>Profilim</Text>
+                    <View style={styles.headerLeft}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+                            <Feather name="chevron-left" size={30} color={activeTheme.text} />
+                        </TouchableOpacity>
+                        <Text style={[styles.title, { color: activeTheme.text }]}>Profilim</Text>
+                    </View>
+
                     <TouchableOpacity onPress={() => navigation.navigate('Settings', { currentUser: userData, activeTheme })}>
                         <Feather name="settings" size={24} color={activeTheme.primary} />
                     </TouchableOpacity>
@@ -71,25 +84,25 @@ const ProfileScreen = ({ route, navigation }: any) => {
                 </View>
 
                 <View style={styles.statsContainer}>
-                    {/* BAŞVURU KUTUSU: Tıklayınca HER ŞEYİ (All) gösteren parametre ile gider */}
-                    <TouchableOpacity 
+                    {/* BAŞVURU KUTUSU */}
+                    <TouchableOpacity
                         style={[styles.statBox, { backgroundColor: activeTheme.surface }]}
-                        onPress={() => navigation.navigate('Dashboard', { 
+                        onPress={() => navigation.navigate('Dashboard', {
                             screen: 'Başvurularım',
-                            params: { filterType: 'all' } 
-                        })} 
+                            params: { filterType: 'all' }
+                        })}
                     >
                         <Text style={[styles.statNum, { color: activeTheme.primary }]}>{counts.totalApps}</Text>
                         <Text style={styles.statLabel}>Başvuru</Text>
                     </TouchableOpacity>
 
-                    {/* ETKİNLİK KUTUSU: Tıklayınca SADECE ETKİNLİKLERİ gösteren parametre ile gider */}
-                    <TouchableOpacity 
+                    {/* ETKİNLİK KUTUSU */}
+                    <TouchableOpacity
                         style={[styles.statBox, { backgroundColor: activeTheme.surface }]}
-                        onPress={() => navigation.navigate('Dashboard', { 
+                        onPress={() => navigation.navigate('Dashboard', {
                             screen: 'Başvurularım',
-                            params: { filterType: 'event' } 
-                        })} 
+                            params: { filterType: 'event' }
+                        })}
                     >
                         <Text style={[styles.statNum, { color: activeTheme.primary }]}>{counts.events}</Text>
                         <Text style={styles.statLabel}>Etkinlik</Text>
@@ -106,19 +119,19 @@ const ProfileScreen = ({ route, navigation }: any) => {
                 </View>
 
                 <View style={styles.section}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={[styles.menuItem, { backgroundColor: activeTheme.surface, marginBottom: 12 }]}
-                        onPress={() => navigation.navigate('Dashboard', { screen: 'Favorilerim' })} 
+                        onPress={() => navigation.navigate('Dashboard', { screen: 'Favorilerim' })}
                     >
                         <Feather name="heart" size={20} color="#EF4444" />
                         <Text style={[styles.menuText, { color: activeTheme.text }]}>Favorilerim</Text>
                         <Feather name="chevron-right" size={18} color={activeTheme.textSecondary} />
                     </TouchableOpacity>
 
-                    {currentUser?.email === "sevdegulsahin25@gmail.com" && (
-                        <TouchableOpacity 
+                    {userData?.role === 'admin' && (
+                        <TouchableOpacity
                             style={[styles.menuItem, { backgroundColor: activeTheme.primary + '15', borderWidth: 1, borderColor: activeTheme.primary }]}
-                            onPress={() => navigation.navigate('AdminDashboard')} 
+                            onPress={() => navigation.navigate('AdminDashboard')}
                         >
                             <Feather name="shield" size={20} color={activeTheme.primary} />
                             <Text style={[styles.menuText, { color: activeTheme.primary }]}>Yönetici Paneli</Text>
@@ -134,7 +147,12 @@ const ProfileScreen = ({ route, navigation }: any) => {
 const styles = StyleSheet.create({
     container: { flex: 1 },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+    // 🔥 GÜNCELLENEN HEADER STİLİ
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 25, alignItems: 'center' },
+    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 }, // Ok ve Yazıyı yan yana tutar
+    backBtn: { paddingRight: 5 }, // Tıklama alanını rahatlatmak için
+
     title: { fontSize: 28, fontWeight: 'bold' },
     profileInfo: { alignItems: 'center', marginBottom: 20 },
     avatar: { width: 90, height: 90, borderRadius: 45, borderWidth: 2, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
@@ -152,5 +170,6 @@ const styles = StyleSheet.create({
     menuItem: { flexDirection: 'row', alignItems: 'center', padding: 18, borderRadius: 20 },
     menuText: { flex: 1, marginLeft: 15, fontWeight: '600' }
 });
+
 
 export default ProfileScreen;

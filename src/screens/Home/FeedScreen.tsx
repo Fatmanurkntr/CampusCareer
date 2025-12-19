@@ -1,307 +1,541 @@
+// src/screens/Home/FeedScreen.tsx
+
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-    View, Text, StyleSheet, FlatList, StatusBar, SafeAreaView, 
-    TextInput, Dimensions, TouchableOpacity, Image, ActivityIndicator, Linking, Alert
+import {
+  View, Text, StyleSheet, FlatList, StatusBar, SafeAreaView,
+  TextInput, Dimensions, TouchableOpacity, Image, ActivityIndicator, Linking, Alert, ScrollView, Modal
 } from 'react-native';
-import firestore from '@react-native-firebase/firestore'; 
-import auth from '@react-native-firebase/auth'; // Auth eklendi
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 import { ThemeColors } from '../../theme/types';
-import JobCard, { JobPost } from '../../components/JobCard'; 
-import HorizontalJobCard from '../../components/HorizontalJobCard'; 
-import QuickAccessCard from '../../components/QuickAccessCard'; 
-import { useNavigation } from '@react-navigation/native'; 
+import { JobPost } from '../../components/JobCard';
+import HorizontalJobCard from '../../components/HorizontalJobCard';
+import QuickAccessCard from '../../components/QuickAccessCard';
+import { useNavigation } from '@react-navigation/native';
 
 // İKONLAR
 import Feather from 'react-native-vector-icons/Feather';
 
-// SERVİSLER
+// SERVİSLER VE YARDIMCILAR
 import { fetchJobs, fetchEvents } from '../../services/opportunities';
 import { buildSearchQuery } from '../../utils/searchLogic';
+import { getEffectiveDeadline } from '../../utils/dateHelpers';
 
+// 🔥🔥🔥 EKLEME 1: BİLDİRİM SERVİSİ VE NOTIFEE İMPORTLARI 🔥🔥🔥
+import NotificationService from '../../services/NotificationService';
+import notifee from '@notifee/react-native';
+// Rehber İçerik Verisi
+const GUIDE_CONTENTS = {
+  cv: {
+    title: "Etkili CV Hazırlama Taktikleri",
+    icon: "file-text",
+    color: "#2563EB", // Mavi
+    items: [
+      { id: 1, text: "Tek Sayfa Kuralı: Öğrenciysen veya yeni mezunsan CV'ni tek sayfada tutmaya çalış." },
+      { id: 2, text: "ATS Dostu Ol: Tasarım şovları yerine okunabilir, sade fontlar kullan. Robotlar okuyamazsa elenirsin." },
+      { id: 3, text: "Projelerini Öne Çıkar: İş deneyimin azsa GitHub projelerini ve kullandığın teknolojileri (React, Node.js vb.) detaylandır." },
+      { id: 4, text: "Linkler Önemli: GitHub, LinkedIn ve varsa Portfolyo linklerini en üste, tıklanabilir şekilde koy." },
+      { id: 5, text: "Hobileri Abartma: 'Kitap okumak' yerine teknik blog yazarlığı gibi sektörel hobilerini yaz." }
+    ]
+  },
+  interview: {
+    title: "Mülakatın Şifreleri",
+    icon: "users",
+    color: "#10B981", // Yeşil
+    items: [
+      { id: 1, text: "Şirketi Araştır: 'Neden biz?' sorusuna verecek cevabın olsun. Vizyonlarını bildiğini göster." },
+      { id: 2, text: "STAR Tekniği: Sorulara 'Durum, Görev, Aksiyon, Sonuç' sırasıyla hikayeleştirerek cevap ver." },
+      { id: 3, text: "Soru Sor: Mülakat sonunda 'Sorun var mı?' dediklerinde mutlaka şirketin teknolojileri veya ekibi hakkında soru sor." },
+      { id: 4, text: "Kamera ve Işık: Online mülakatta ışığı karşına al, kameraya bakarak konuş, ekrana değil." },
+      { id: 5, text: "Teknik Hazırlık: LeetCode gibi platformlardan veri yapıları ve algoritma sorularına göz at." }
+    ]
+  }
+};
 const { width } = Dimensions.get('window');
 
-const FeedScreen: React.FC<{activeTheme: ThemeColors}> = ({ activeTheme }) => {
+const FeedScreen: React.FC<{ activeTheme: ThemeColors }> = ({ activeTheme }) => {
   const navigation = useNavigation<any>();
-  const flatListRef = useRef<FlatList>(null); 
+  const flatListRef = useRef<FlatList>(null);
   const currentUser = auth().currentUser;
-  
-  // --- STATE YAPISI ---
-  const [activeTab, setActiveTab] = useState('Tümü'); 
-  const [activeTopic, setActiveTopic] = useState<string | null>(null); 
-  const [searchText, setSearchText] = useState('');
-  const [opportunities, setOpportunities] = useState<JobPost[]>([]); 
-  const [isLoading, setIsLoading] = useState(false); 
-  const [hasSearched, setHasSearched] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false); 
 
-  // Admin Onaylı Önerilen İlanlar State
+  // --- STATE YAPISI ---
+  const [activeTab, setActiveTab] = useState('Tümü');
+  const [activeTopic, setActiveTopic] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState('');
+  const [opportunities, setOpportunities] = useState<JobPost[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [recommendedAds, setRecommendedAds] = useState<JobPost[]>([]);
   const [isRecLoading, setIsRecLoading] = useState(true);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedGuide, setSelectedGuide] = useState<any>(null);
 
-  // --- 1. ONAYLANAN İLANLARI CANLI DİNLE (Senkronizasyon) ---
+  // Kart açma fonksiyonu
+  const openGuide = (type: 'cv' | 'interview') => {
+    setSelectedGuide(GUIDE_CONTENTS[type]);
+    setModalVisible(true);
+  };
+  // --- KULLANICI PROFİLİ ---
+  useEffect(() => {
+    if (currentUser) {
+      firestore().collection('Users').doc(currentUser.uid).get()
+        .then(doc => {
+          // 🔥 HATA BURADAYDI: doc.exists() şeklinde fonksiyon olarak çağırılmalı
+          if (doc.exists()) {
+            setUserProfile(doc.data());
+          }
+        })
+        .catch(error => console.error("Profil çekme hatası:", error));
+    }
+  }, [currentUser]); // currentUser bağımlılığını eklemek daha güvenlidir
+
+  // --- ONAYLI İLANLARI DİNLE ---
   useEffect(() => {
     setIsRecLoading(true);
-    // onSnapshot kullanarak favori veya başvuru değişimlerini anlık yakalıyoruz
     const unsubscribe = firestore()
-        .collection('JobPostings')
-        .where('status', '==', 'approved')
-        .limit(10)
-        .onSnapshot(querySnapshot => {
-            const ads = querySnapshot?.docs.map(doc => ({
-                id: doc.id,
-                company: doc.data().companyName || 'Kurumsal Firma',
-                title: doc.data().title || 'İsimsiz İlan',
-                ...doc.data()
-            })) as JobPost[];
-            setRecommendedAds(ads);
-            setIsRecLoading(false);
-        }, error => {
-            console.error("Firestore Dinleme Hatası:", error);
-            setIsRecLoading(false);
-        });
+      .collection('JobPostings')
+      .where('status', '==', 'approved')
+      .limit(50)
+      .onSnapshot(querySnapshot => {
+        const ads = querySnapshot?.docs.map(doc => ({
+          id: doc.id,
+          company: doc.data().companyName || 'Kurumsal Firma',
+          title: doc.data().title || 'İsimsiz İlan',
+          ...doc.data()
+        })) as JobPost[];
 
+        if (userProfile) {
+          const sortedAds = ads.map(ad => {
+            const score = calculateRelevanceScore(ad, userProfile);
+            return { ...ad, relevanceScore: score };
+          }).sort((a: any, b: any) => {
+            if (b.relevanceScore !== a.relevanceScore) return b.relevanceScore - a.relevanceScore;
+            return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
+          });
+          setRecommendedAds(sortedAds.slice(0, 10));
+        } else {
+          setRecommendedAds(ads.sort((a: any, b: any) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).slice(0, 10));
+        }
+        setIsRecLoading(false);
+      }, error => {
+        console.error("Firestore Dinleme Hatası:", error);
+        setIsRecLoading(false);
+      });
+
+    return () => unsubscribe();
+  }, [userProfile]);
+
+  const calculateRelevanceScore = (job: any, userProfile: any) => {
+    if (!userProfile) return 0;
+    let score = 0;
+    if (job.category && userProfile.interests && Array.isArray(userProfile.interests)) {
+      if (userProfile.interests.includes(job.category)) score += 100;
+    }
+    const jobText = `${job.title} ${job.description}`.toLowerCase();
+    const department = (userProfile.department || '').toLowerCase();
+    const deptKeywords = department.split(' ').filter((w: string) => w.length > 3);
+    deptKeywords.forEach((k: string) => {
+      if (jobText.includes(k)) score += 20;
+    });
+    return score;
+  };
+
+  // --- FAVORİLERİ DİNLE ---
+  useEffect(() => {
+    if (!currentUser) return;
+    const unsubscribe = firestore()
+      .collection('Favorites')
+      .where('userId', '==', currentUser.uid)
+      .onSnapshot(snapshot => {
+        const ids = snapshot.docs.map(doc => doc.data().jobId);
+        setFavoriteIds(ids);
+      });
     return () => unsubscribe();
   }, []);
 
-  // --- 2. SEKTÖREL VERİ ÇEKME ---
+  // --- SEKTÖREL VERİ ---
   useEffect(() => {
     if (!activeTopic) return;
-
     const loadData = async () => {
-        setOpportunities([]); 
-        setIsLoading(true);
-        setHasSearched(true);
-        setIsCollapsed(false); 
-        
-        try {
-            let allData: JobPost[] = [];
-            if (activeTab === 'Tümü') {
-                const [jobs, events] = await Promise.all([
-                    fetchJobs(buildSearchQuery('İş', activeTopic), 'İş'),
-                    fetchEvents(buildSearchQuery('Etkinlikler', activeTopic))
-                ]);
-                allData = [...events, ...jobs];
-            } else if (activeTab === 'Etkinlikler') {
-                allData = await fetchEvents(buildSearchQuery('Etkinlikler', activeTopic));
-            } else {
-                const type = activeTab === 'Staj' ? 'Staj' : 'İş';
-                allData = await fetchJobs(buildSearchQuery(type, activeTopic), type);
-            }
-            setOpportunities(allData);
-        } catch (error) {
-            console.error("Yükleme Hatası:", error);
-        } finally {
-            setIsLoading(false);
+      setOpportunities([]);
+      setIsLoading(true);
+      setHasSearched(true);
+      setIsCollapsed(false);
+      try {
+        let allData: JobPost[] = [];
+        if (activeTab === 'Tümü') {
+          const [jobs, events] = await Promise.all([
+            fetchJobs(buildSearchQuery('İş', activeTopic), 'İş'),
+            fetchEvents(buildSearchQuery('Etkinlikler', activeTopic))
+          ]);
+          allData = [...events, ...jobs];
+        } else if (activeTab === 'Etkinlikler') {
+          allData = await fetchEvents(buildSearchQuery('Etkinlikler', activeTopic));
+        } else {
+          const type = activeTab === 'Staj' ? 'Staj' : 'İş';
+          allData = await fetchJobs(buildSearchQuery(type, activeTopic), type);
         }
+        setOpportunities(allData);
+      } catch (error) {
+        console.error("Yükleme Hatası:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     loadData();
   }, [activeTab, activeTopic]);
 
-  // --- YARDIMCI FONKSİYONLAR ---
-  const handleCardPress = (link?: string) => {
-      if (link && link.startsWith('http')) {
-          Linking.openURL(link).catch(() => Alert.alert('Hata', 'Bağlantı açılamadı.'));
+  // FeedScreen.tsx içindeki handleToggleFavorite fonksiyonu
+
+  const handleToggleFavorite = async (item: JobPost) => {
+    if (!currentUser) {
+      Alert.alert("Giriş Yap", "Favorilemek için giriş yapmalısınız.");
+      return;
+    }
+
+    try {
+      const favRef = firestore().collection('Favorites');
+      const snapshot = await favRef
+        .where('userId', '==', currentUser.uid)
+        .where('jobId', '==', item.id)
+        .get();
+
+      if (snapshot.empty) {
+        // --- 1. Firestore'a Ekle ---
+        await favRef.add({
+          userId: currentUser.uid,
+          jobId: item.id,
+          jobData: item,
+          type: item.type || 'job',
+          addedAt: firestore.FieldValue.serverTimestamp()
+        });
+
+        // --- 2. 🔥 BİLDİRİM SİSTEMİ (TEK SATIR) ---
+        // Önce anlık bilgi ver
+        await NotificationService.displayImmediateNotification(item.title);
+
+        // Sonra akıllı planlamayı başlat (Tüm mantık içeride)
+        await NotificationService.scheduleSmartNotifications(item);
+
+      } else {
+        // --- Silme ---
+        const batch = firestore().batch();
+        snapshot.docs.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+
+        // --- Bildirimleri İptal Et ---
+        // Haftalık döngü dahil hepsini siler
+        await NotificationService.cancelNotifications(item.id);
       }
+    } catch (error) {
+      console.error("Favori işlemi hatası:", error);
+    }
+  };
+
+  const handleCardPress = (item: JobPost) => {
+    navigation.navigate('JobDetail', { item: item, activeTheme: activeTheme });
   };
 
   const handleQuickSearch = (topicName: string) => {
-      setSearchText(''); 
-      setActiveTopic(topicName); 
-      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    setSearchText('');
+    setActiveTopic(topicName);
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({ offset: 0, animated: true });
+    }
   };
 
-  const filteredList = opportunities.filter(item => 
-    (item.title || '').toLowerCase().includes(searchText.toLowerCase()) || 
+  const filteredList = opportunities.filter(item =>
+    (item.title || '').toLowerCase().includes(searchText.toLowerCase()) ||
     (item.company || '').toLowerCase().includes(searchText.toLowerCase())
   );
-
+  // Liste boşken gösterilecek tasarım
+  const renderEmptyList = () => (
+    <View style={styles.emptyContainer}>
+      <View style={[styles.emptyIconBox, { backgroundColor: activeTheme.surface }]}>
+        <Feather name="search" size={40} color={activeTheme.textSecondary} style={{ opacity: 0.5 }} />
+      </View>
+      <Text style={[styles.emptyTitle, { color: activeTheme.text }]}>
+        Sonuç Bulunamadı
+      </Text>
+      <Text style={[styles.emptyText, { color: activeTheme.textSecondary }]}>
+        Aradığınız kriterlere uygun aktif ilan veya etkinlik şu an mevcut değil.
+      </Text>
+    </View>
+  );
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: activeTheme?.background || '#FFFFFF' }]}>
       <StatusBar barStyle={activeTheme?.background === '#000000' || activeTheme?.background === '#0A0A32' ? 'light-content' : 'dark-content'} />
-      
+
       <FlatList
-          ref={flatListRef}
-          data={[]} 
-          renderItem={null}
-          keyExtractor={() => 'main-scroll'}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListHeaderComponent={
+        ref={flatListRef}
+        data={[]}
+        renderItem={null}
+        keyExtractor={() => 'main-scroll'}
+
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View>
+            <View style={styles.headerTop}>
               <View>
-                {/* 1. HEADER */}
-                <View style={styles.headerTop}>
-                  <View>
-                    <Text style={[styles.greeting, { color: activeTheme?.textSecondary }]}>Tekrar Hoş Geldin </Text>
-                    <Text style={[styles.title, { color: activeTheme?.text }]}>Kariyerini Şekillendir</Text>
-                  </View>
-                  <TouchableOpacity 
-                    onPress={() => navigation.navigate('ProfileDetail')} 
-                    style={[styles.profileButton, { borderColor: activeTheme?.surface, backgroundColor: activeTheme?.surface }]}
-                  >
-                    <Feather name="user" size={24} color={activeTheme?.primary} />
+                <Text style={[styles.greeting, { color: activeTheme?.textSecondary }]}>Tekrar Hoş Geldin</Text>
+                <Text style={[styles.title, { color: activeTheme?.text }]}>Kariyerini Şekillendir</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ProfileDetail')}
+                style={[styles.profileButton, { borderColor: activeTheme?.surface, backgroundColor: activeTheme?.surface }]}
+              >
+                <Feather name="user" size={24} color={activeTheme?.primary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.searchContainer, {
+              backgroundColor: activeTheme?.surface || 'rgba(0,0,0,0.05)',
+              borderColor: 'rgba(0,0,0,0.05)'
+            }]}>
+              <Feather name="search" size={20} color={activeTheme?.textSecondary} style={{ marginRight: 10 }} />
+              <TextInput
+                placeholder="İlan veya şirket ara..."
+                placeholderTextColor={activeTheme?.textSecondary}
+                style={[styles.searchInput, { color: activeTheme?.text }]}
+                value={searchText}
+                onChangeText={setSearchText}
+              />
+            </View>
+
+            <View style={styles.filterContainer}>
+              {['Tümü', 'İş İlanı', 'Staj', 'Etkinlikler'].map((tab) => (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => setActiveTab(tab)}
+                  style={[
+                    styles.filterChip,
+                    activeTab === tab
+                      ? { backgroundColor: activeTheme?.primary }
+                      : { backgroundColor: activeTheme?.surface }
+                  ]}
+                >
+                  <Text style={[
+                    styles.filterText,
+                    { color: activeTab === tab ? '#FFF' : activeTheme?.textSecondary }
+                  ]}>
+                    {tab}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {isLoading ? (
+              <View style={styles.statusContainer}>
+                <ActivityIndicator size="large" color={activeTheme?.primary} />
+                <Text style={[styles.statusText, { color: activeTheme?.textSecondary }]}>İlanlar taranıyor...</Text>
+              </View>
+            ) : activeTopic ? (
+              filteredList.length > 0 ? (
+                <View style={styles.sectionContainer}>
+                  <TouchableOpacity onPress={() => setIsCollapsed(!isCollapsed)} style={styles.collapseHeader}>
+                    <Text style={[styles.sectionTitle, { color: activeTheme?.text }]}>
+                      {activeTopic} Fırsatları ({filteredList.length})
+                    </Text>
+                    <Feather name={isCollapsed ? 'chevron-down' : 'chevron-up'} size={20} color={activeTheme?.primary} />
                   </TouchableOpacity>
-                </View>
-
-                {/* 2. ARAMA BARI */}
-                <View style={[styles.searchContainer, { 
-                    backgroundColor: activeTheme?.surface || 'rgba(0,0,0,0.05)',
-                    borderColor: 'rgba(0,0,0,0.05)'
-                }]}>
-                    <Feather name="search" size={20} color={activeTheme?.textSecondary} style={{ marginRight: 10 }} />
-                    <TextInput 
-                        placeholder="İlan veya şirket ara..." 
-                        placeholderTextColor={activeTheme?.textSecondary} 
-                        style={[styles.searchInput, { color: activeTheme?.text }]} 
-                        value={searchText} 
-                        onChangeText={setSearchText} 
-                    />
-                </View>
-                
-                {/* 3. FİLTRE ÇİPLERİ */}
-                <View style={styles.filterContainer}>
-                    {['Tümü', 'İş İlanı', 'Staj', 'Etkinlikler'].map((tab) => (
-                        <TouchableOpacity
-                            key={tab}
-                            onPress={() => setActiveTab(tab)}
-                            style={[
-                                styles.filterChip,
-                                activeTab === tab 
-                                    ? { backgroundColor: activeTheme?.primary } 
-                                    : { backgroundColor: activeTheme?.surface }
-                            ]}
-                        >
-                            <Text style={[
-                                styles.filterText, 
-                                { color: activeTab === tab ? '#FFF' : activeTheme?.textSecondary }
-                            ]}>
-                                {tab}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-
-                {/* 4. SEKTÖR SONUÇLARI */}
-                {isLoading ? (
-                    <View style={styles.statusContainer}>
-                        <ActivityIndicator size="large" color={activeTheme?.primary} />
-                        <Text style={[styles.statusText, { color: activeTheme?.textSecondary }]}>Fırsatlar taranıyor...</Text>
-                    </View>
-                ) : activeTopic && filteredList.length > 0 ? (
-                    <View style={styles.sectionContainer}>
-                      <TouchableOpacity onPress={() => setIsCollapsed(!isCollapsed)} style={styles.collapseHeader}>
-                        <Text style={[styles.sectionTitle, { color: activeTheme?.text }]}>
-                          {activeTopic} Fırsatları ({filteredList.length})
-                        </Text>
-                        <Feather name={isCollapsed ? 'chevron-down' : 'chevron-up'} size={20} color={activeTheme?.primary} />
-                      </TouchableOpacity>
-                      {!isCollapsed && (
-                        <FlatList 
-                          data={filteredList} 
-                          renderItem={({item}) => (<HorizontalJobCard item={item} activeTheme={activeTheme} onPress={() => handleCardPress(item.link)} />)} 
-                          keyExtractor={(item) => 'result-' + item.id} 
-                          horizontal showsHorizontalScrollIndicator={false} 
-                          contentContainerStyle={{ paddingHorizontal: 20, marginTop: 12 }} 
+                  {!isCollapsed && (
+                    <FlatList
+                      data={filteredList}
+                      renderItem={({ item }) => (
+                        <HorizontalJobCard
+                          item={item}
+                          activeTheme={activeTheme}
+                          onPress={() => handleCardPress(item)}
+                          isFavorite={favoriteIds.includes(item.id)}
+                          onFavoritePress={() => handleToggleFavorite(item)}
                         />
                       )}
-                    </View>
-                ) : null}
-
-                {/* 5. SEKTÖR GRID (Minimalist İkonlar) */}
-                <View style={styles.sectionContainer}>
-                  <Text style={[styles.sectionTitle, { color: activeTheme?.text, paddingHorizontal: 20, marginBottom: 15 }]}>Sektör Seç & Keşfet</Text>
-                  <View style={styles.gridContainer}>
-                      {[
-                          { id: '1', title: 'Yazılım', icon: 'code', color: '#4F46E5' }, 
-                          { id: '2', title: 'Tasarım', icon: 'layers', color: '#EC4899' },
-                          { id: '3', title: 'Yapay Zeka', icon: 'cpu', color: '#8B5CF6' }, 
-                          { id: '4', title: 'Girişim', icon: 'zap', color: '#F59E0B' },
-                          { id: '5', title: 'Oyun Geliş.', icon: 'play-circle', color: '#10B981' }, 
-                          { id: '6', title: 'Veri Bilimi', icon: 'pie-chart', color: '#6366F1' },
-                          { id: '7', title: 'Siber Güv.', icon: 'shield', color: '#EF4444' }, 
-                          { id: '8', title: 'Web3', icon: 'link', color: '#3B82F6' },
-                          { id: '9', title: 'Pazarlama', icon: 'trending-up', color: '#14B8A6' },
-                      ].map((item) => (
-                          <View key={item.id} style={styles.gridItemWrapper}>
-                              <QuickAccessCard 
-                                title={item.title} 
-                                icon={<Feather name={item.icon as any} size={20} color="#FFF" />} 
-                                color={item.color} 
-                                activeTheme={activeTheme} 
-                                onPress={() => handleQuickSearch(item.title)} 
-                              />
-                          </View>
-                      ))}
-                  </View>
-                </View>
-
-                {/* 6. POPÜLER ŞİRKETLER */}
-                <View style={styles.sectionContainer}>
-                  <Text style={[styles.sectionTitle, { color: activeTheme?.text, paddingHorizontal: 20, marginBottom: 15 }]}>Popüler Şirketler</Text>
-                  <FlatList 
-                    data={[
-                        { id: 'c1', name: 'Trendyol', logo: 'https://cdn.webrazzi.com/uploads/2018/06/trendyol-logo-518.png' }, 
-                        { id: 'c2', name: 'Google', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/1200px-Google_%22G%22_Logo.svg.png' }, 
-                        { id: 'c3', name: 'Getir', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Getir_Logo.svg/1200px-Getir_Logo.svg.png' }
-                    ]} 
-                    renderItem={({item}) => (
-                        <View style={{ alignItems: 'center', marginRight: 20 }}>
-                            <View style={[styles.companyLogoBox, { borderColor: activeTheme?.surface, backgroundColor: '#fff' }]}>
-                                <Image source={{ uri: item.logo }} style={{ width: 35, height: 35 }} resizeMode="contain" />
-                            </View>
-                            <Text style={{ fontSize: 12, marginTop: 8, color: activeTheme?.text }}>{item.name}</Text>
-                        </View>
-                    )} 
-                    keyExtractor={item => item.id} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }} 
-                  />
-                </View>
-
-                {/* 7. ÖNERİLENLER */}
-                <View style={styles.sectionContainer}>
-                  <Text style={[styles.sectionTitle, { color: activeTheme?.text, paddingHorizontal: 20, marginBottom: 12 }]}>Sizin İçin Önerilenler</Text>
-                  {isRecLoading ? <ActivityIndicator color={activeTheme?.primary} /> : (
-                    <FlatList 
-                        data={recommendedAds} 
-                        renderItem={({item}) => (
-                            <HorizontalJobCard 
-                                item={item} 
-                                activeTheme={activeTheme} 
-                                onPress={() => navigation.navigate('JobDetail', { item: item })} 
-                            />
-                        )} 
-                        keyExtractor={(item) => 'rec-' + item.id} 
-                        horizontal showsHorizontalScrollIndicator={false} 
-                        contentContainerStyle={{ paddingHorizontal: 20 }} 
+                      keyExtractor={(item) => 'result-' + item.id}
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ paddingHorizontal: 20, marginTop: 12 }}
                     />
                   )}
                 </View>
+              ) : (
+                // Sadece burada renderEmptyList kalsın
+                renderEmptyList()
+              )
+            ) : null}
 
-                {/* 8. KARİYER REHBERİ */}
-                <View style={[styles.sectionContainer, { marginBottom: 40 }]}>
-                  <Text style={[styles.sectionTitle, { color: activeTheme?.text, paddingHorizontal: 20, marginBottom: 15 }]}>Kariyer Rehberi</Text>
-                  <FlatList 
-                    data={[
-                        { id: 'tip1', title: 'Etkili CV', icon: 'file-text', bg: '#EEF2FF', color: '#4F46E5' }, 
-                        { id: 'tip2', title: 'Mülakat', icon: 'video', bg: '#FFF7ED', color: '#F97316' }
-                    ]} 
-                    renderItem={({item}) => (
-                    <TouchableOpacity style={[styles.guideCard, { backgroundColor: item.bg }]}>
-                        <Feather name={item.icon as any} size={24} color={item.color} />
-                        <View>
-                            <Text style={styles.guideTitle}>{item.title}</Text>
-                            <Text style={styles.guideSubtitle}>Yeni İçerik</Text>
-                        </View>
-                    </TouchableOpacity>
-                    )} 
-                    keyExtractor={item => item.id} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }} 
-                  />
-                </View>
+            <View style={styles.sectionContainer}>
+              <Text style={[styles.sectionTitle, { color: activeTheme?.text, paddingHorizontal: 20, marginBottom: 15 }]}>Sektör Seç & Keşfet</Text>
+              <View style={styles.gridContainer}>
+                {[
+                  { id: '1', title: 'Yazılım', icon: 'code', color: '#4F46E5' },
+                  { id: '2', title: 'Tasarım', icon: 'layers', color: '#EC4899' },
+                  { id: '3', title: 'Yapay Zeka', icon: 'cpu', color: '#8B5CF6' },
+                  { id: '4', title: 'Girişim', icon: 'zap', color: '#F59E0B' },
+                  { id: '5', title: 'Oyun Geliş.', icon: 'play-circle', color: '#10B981' },
+                  { id: '6', title: 'Veri Bilimi', icon: 'pie-chart', color: '#6366F1' },
+                  { id: '7', title: 'Siber Güv.', icon: 'shield', color: '#EF4444' },
+                  { id: '8', title: 'Web3', icon: 'link', color: '#3B82F6' },
+                  { id: '9', title: 'Pazarlama', icon: 'trending-up', color: '#14B8A6' },
+                ].map((item) => (
+                  <View key={item.id} style={styles.gridItemWrapper}>
+                    <QuickAccessCard
+                      title={item.title}
+                      icon={<Feather name={item.icon as any} size={20} color="#FFF" />}
+                      color={item.color}
+                      activeTheme={activeTheme}
+                      onPress={() => handleQuickSearch(item.title)}
+                    />
+                  </View>
+                ))}
               </View>
-          }
-        />
+            </View>
+
+            <View style={styles.sectionContainer}>
+              <Text style={[styles.sectionTitle, { color: activeTheme?.text, paddingHorizontal: 20, marginBottom: 12 }]}>Sizin İçin Önerilenler</Text>
+              {isRecLoading ? <ActivityIndicator color={activeTheme?.primary} /> : (
+                <FlatList
+                  data={recommendedAds}
+                  renderItem={({ item }) => (
+                    <HorizontalJobCard
+                      item={item}
+                      activeTheme={activeTheme}
+                      onPress={() => handleCardPress(item)}
+                      isFavorite={favoriteIds.includes(item.id)}
+                      onFavoritePress={() => handleToggleFavorite(item)}
+                    />
+                  )}
+                  keyExtractor={(item) => 'rec-' + item.id}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 20 }}
+                />
+              )}
+            </View>
+
+            <View style={styles.sectionContainer}>
+              <Text style={[styles.sectionTitle, { color: activeTheme?.text, paddingHorizontal: 20, marginBottom: 15 }]}>Popüler Şirketler</Text>
+              <FlatList
+                data={[
+                  // 🔥 DEĞİŞİKLİK 1: Link yerine 'require' kullanıyoruz
+                  { id: 'c1', name: 'Trendyol', logo: require('../../assets/logos/trendyol.png') },
+                  { id: 'c2', name: 'Google', logo: require('../../assets/logos/google.png') },
+                  { id: 'c3', name: 'Getir', logo: require('../../assets/logos/getir.png') }
+                ]}
+                renderItem={({ item }) => (
+                  <View style={{ alignItems: 'center', marginRight: 20 }}>
+                    <View style={[styles.companyLogoBox, { borderColor: activeTheme?.surface, backgroundColor: '#fff' }]}>
+
+                      {/* 🔥 DEĞİŞİKLİK 2: 'uri' süslü parantezlerini kaldırdık, direkt item.logo veriyoruz */}
+                      <Image
+                        source={item.logo}
+                        style={{ width: 35, height: 35 }}
+                        resizeMode="contain"
+                      />
+
+                    </View>
+                    <Text style={{ fontSize: 12, marginTop: 8, color: activeTheme?.text }}>{item.name}</Text>
+                  </View>
+                )}
+                keyExtractor={item => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20, marginBottom: 40 }}
+              />
+            </View>
+            {/* --- EKSİK OLAN KISIM: KARİYER REHBERİ --- */}
+            {/* --- KARİYER REHBERİ --- */}
+            <View style={[styles.sectionContainer, { marginBottom: 100 }]}>
+              <Text style={[styles.sectionTitle, { color: activeTheme?.text, paddingHorizontal: 20, marginBottom: 15 }]}>
+                Kariyer Rehberi
+              </Text>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20 }}
+              >
+                {/* 1. KART: CV Hazırlama */}
+                <TouchableOpacity
+                  style={[styles.guideCard, { backgroundColor: activeTheme?.surface }]}
+                  onPress={() => openGuide('cv')} // 🔥 BURASI EKLENDİ
+                >
+                  <View style={{
+                    width: 44, height: 44,
+                    borderRadius: 12,
+                    backgroundColor: activeTheme?.primary + '15',
+                    justifyContent: 'center', alignItems: 'center'
+                  }}>
+                    <Feather name="file-text" size={22} color={activeTheme?.primary} />
+                  </View>
+
+                  <View>
+                    <Text style={[styles.guideTitle, { color: activeTheme?.text }]}>CV Hazırla</Text>
+                    <Text style={[styles.guideSubtitle, { color: activeTheme?.textSecondary }]}>Profesyonel ipuçları</Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* 2. KART: Mülakat */}
+                <TouchableOpacity
+                  style={[styles.guideCard, { backgroundColor: activeTheme?.surface }]}
+                  onPress={() => openGuide('interview')} // 🔥 BURASI EKLENDİ
+                >
+                  <View style={{
+                    width: 44, height: 44,
+                    borderRadius: 12,
+                    backgroundColor: '#10B98115',
+                    justifyContent: 'center', alignItems: 'center'
+                  }}>
+                    <Feather name="users" size={22} color="#10B981" />
+                  </View>
+
+                  <View>
+                    <Text style={[styles.guideTitle, { color: activeTheme?.text }]}>Mülakat</Text>
+                    <Text style={[styles.guideSubtitle, { color: activeTheme?.textSecondary }]}>Sık sorulanlar</Text>
+                  </View>
+                </TouchableOpacity>
+
+              </ScrollView>
+            </View>
+          </View>
+        }
+      />
+      {/* 🔥 MODAL PENCERESİ (Bunu SafeAreaView kapanmadan hemen önceye koy) */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: activeTheme?.background }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Feather name={selectedGuide?.icon} size={24} color={selectedGuide?.color} />
+                <Text style={[styles.modalTitle, { color: activeTheme?.text }]}>{selectedGuide?.title}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Feather name="x" size={24} color={activeTheme?.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {selectedGuide?.items.map((item: any) => (
+                <View key={item.id} style={styles.guideItem}>
+                  <Feather name="check-circle" size={20} color={selectedGuide?.color} style={{ marginTop: 2 }} />
+                  <Text style={[styles.guideText, { color: activeTheme?.textSecondary }]}>{item.text}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
   listContent: { paddingBottom: 20 },
@@ -324,7 +558,84 @@ const styles = StyleSheet.create({
   companyLogoBox: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center', borderWidth: 1, elevation: 2 },
   guideCard: { width: 180, height: 90, borderRadius: 20, padding: 16, marginRight: 16, flexDirection: 'row', alignItems: 'center', gap: 12, elevation: 2 },
   guideTitle: { fontSize: 14, fontWeight: '700', color: '#1F2937' },
-  guideSubtitle: { fontSize: 12, color: '#6B7280' }
+
+  // 🔥 DÜZELTME BURADA: guideSubtitle sonuna virgül eklendi
+  guideSubtitle: { fontSize: 12, color: '#6B7280' },
+
+  // --- MODAL STİLLERİ ---
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    height: '50%',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    paddingBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  guideItem: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+    paddingRight: 10
+  },
+  guideText: {
+    fontSize: 16,
+    lineHeight: 24,
+    flex: 1
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 30,
+    marginTop: 20,
+    minHeight: 20,
+  },
+  emptyIconBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    // Hafif gölge
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: '80%',
+  }
 });
 
 export default FeedScreen;

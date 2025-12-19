@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-    View, Text, TextInput, StyleSheet, ScrollView, 
-    TouchableOpacity, SafeAreaView, Alert, ActivityIndicator, StatusBar 
+import {
+    View, Text, TextInput, StyleSheet, ScrollView,
+    TouchableOpacity, SafeAreaView, Alert, ActivityIndicator, StatusBar
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
@@ -18,13 +18,13 @@ const AddEventScreen = ({ navigation }: any) => {
     const [title, setTitle] = useState('');
     const [date, setDate] = useState('');
     const [location, setLocation] = useState(''); // 🔥 Artık kullanılıyor
-    const [eventLink, setEventLink] = useState('');
     const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(false);
+    const [deadline, setDeadline] = useState('');
 
     const handlePostEvent = async () => {
         // Form doğrulaması
-        if (!title || !date || !eventLink || !location) {
+        if (!title || !date || !location) {
             Alert.alert("Eksik Bilgi", "Lütfen etkinlik adı, tarih, konum ve kayıt linkini doldurun.");
             return;
         }
@@ -36,14 +36,15 @@ const AddEventScreen = ({ navigation }: any) => {
             // Şirket adını güncel çekmek için kullanıcı dokümanına erişim
             const userDoc = await firestore().collection('Users').doc(currentUser?.uid).get();
             const userData = userDoc.data();
+            const finalDeadline = deadline || date;
 
             await firestore().collection('EventPostings').add({
                 companyId: currentUser?.uid,
                 companyName: userData?.companyName || 'Kurumsal Firma',
                 title: title,
                 date: date,
+                deadlineDate: finalDeadline,
                 location: location, // 🔥 Veritabanına ekleniyor
-                eventLink: eventLink,
                 description: description,
                 status: 'pending', // Admin onayı bekleyen durum
                 participantCount: 0,
@@ -78,12 +79,17 @@ const AddEventScreen = ({ navigation }: any) => {
                 <Text style={styles.label}>TARİH</Text>
                 <TextInput style={styles.input} value={date} onChangeText={setDate} placeholder="25.12.2025 - 19:00" />
 
+                <Text style={styles.label}>SON KAYIT TARİHİ (Opsiyonel)</Text>
+                <TextInput
+                    style={styles.input}
+                    value={deadline}
+                    onChangeText={setDeadline}
+                    placeholder="Boş bırakılırsa etkinlik tarihi baz alınır"
+                />
+
                 {/* 🔥 DÜZELTME: Konum alanı eklendi, setLocation artık kullanılıyor */}
                 <Text style={styles.label}>KONUM / PLATFORM</Text>
                 <TextInput style={styles.input} value={location} onChangeText={setLocation} placeholder="Zoom veya Şişli Yerleşkesi" />
-
-                <Text style={styles.label}>KATILIM LİNKİ</Text>
-                <TextInput style={styles.input} value={eventLink} onChangeText={setEventLink} placeholder="Kayıt adresi" autoCapitalize="none" />
 
                 <Text style={styles.label}>AÇIKLAMA</Text>
                 <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} multiline />
