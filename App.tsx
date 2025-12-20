@@ -1,17 +1,16 @@
-import React, { useEffect } from 'react'; // useEffect eklendi
+import React, { useEffect } from 'react'; 
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import notifee, { EventType } from '@notifee/react-native'; // 🔥 Notifee eklendi
+import notifee, { EventType } from '@notifee/react-native'; 
 
-// Context Provider'lar
 import { AuthProvider } from './src/context/AuthContext';
 import { ThemeProvider } from './src/context/ThemeContext';
 
-// Ana Navigatör
+
 import AppNavigator from './src/navigation/AppNavigator';
 import { LogBox } from 'react-native';
 
-// Uyarıları gizleme
+
 LogBox.ignoreLogs([
     'This method is deprecated',
     'Firebase Web modular SDK API'
@@ -19,7 +18,7 @@ LogBox.ignoreLogs([
 
 const App = () => {
 
-    // 🔥 BU BLOĞU EKLEDİK: Uygulama ön plandayken bildirim olaylarını dinler
+    
     useEffect(() => {
         return notifee.onForegroundEvent(({ type, detail }) => {
             switch (type) {
@@ -35,11 +34,8 @@ const App = () => {
 
     return (
         <SafeAreaProvider>
-            {/* 1. ThemeProvider dışta olmalı */}
             <ThemeProvider>
-                {/* 2. AuthProvider hemen içinde olmalı */}
                 <AuthProvider>
-                    {/* 3. NavigationContainer en içte olmalı */}
                     <NavigationContainer>
                         <AppNavigator />
                     </NavigationContainer>
