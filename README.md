@@ -6,6 +6,12 @@ CampusCareer, üniversite öğrencilerinin ve yeni mezunların staj, iş ilanlar
 ## Proje Amacı
 Günümüzde öğrenciler, kariyer fırsatlarını takip ederken platform kirliliği ve odaklanma sorunu yaşamaktadır. CampusCareer, iş dünyası ile gelişim ekosistemini tek bir çatı altında birleştirerek kullanıcılara ilgi alanlarına göre özelleştirilmiş ve denetlenmiş bir kariyer akışı sunmayı amaçlar.
 
+<img width="981" height="556" alt="Ekran görüntüsü 2026-02-07 191858" src="https://github.com/user-attachments/assets/903e276b-dd3c-4931-9e32-6bbe1596a3fd" />
+<img width="814" height="462" alt="Ekran görüntüsü 2026-02-07 191850" src="https://github.com/user-attachments/assets/eec0dc14-acbe-4673-a96d-525111aeb7a9" />
+
+<img width="891" height="503" alt="Ekran görüntüsü 2026-02-07 191906" src="https://github.com/user-attachments/assets/ce80352b-2d27-4c54-9eb1-511bf60613c9" />
+<img width="671" height="594" alt="Ekran görüntüsü 2026-02-07 191916" src="https://github.com/user-attachments/assets/f2c92242-c156-4ad1-992e-146267e0bac2" />
+
 ## Kullanılan Teknolojiler (Tech Stack)
 * Frontend: React Native ve TypeScript kullanılarak çapraz platform desteği sağlanmıştır.
 * Backend: Sunucusuz mimari (Serverless) yaklaşımıyla Google Firebase (Cloud Firestore ve Authentication) kullanılmıştır.
@@ -36,11 +42,7 @@ Proje, mantıksal katmanların birbirinden ayrıldığı MVVM (Model-View-ViewMo
 * Hata Yönetimi: Geliştirme sürecinde tespit edilen teknik hatalar (id undefined, onaysız ilan gösterimi vb.) dökümante edilmiş ve sprint süreçlerinde çözümlenmiştir.
   
 
-<img width="981" height="556" alt="Ekran görüntüsü 2026-02-07 191858" src="https://github.com/user-attachments/assets/903e276b-dd3c-4931-9e32-6bbe1596a3fd" />
-<img width="814" height="462" alt="Ekran görüntüsü 2026-02-07 191850" src="https://github.com/user-attachments/assets/eec0dc14-acbe-4673-a96d-525111aeb7a9" />
 
-<img width="891" height="503" alt="Ekran görüntüsü 2026-02-07 191906" src="https://github.com/user-attachments/assets/ce80352b-2d27-4c54-9eb1-511bf60613c9" />
-<img width="671" height="594" alt="Ekran görüntüsü 2026-02-07 191916" src="https://github.com/user-attachments/assets/f2c92242-c156-4ad1-992e-146267e0bac2" />
 
 
 
